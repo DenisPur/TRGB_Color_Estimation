@@ -1,4 +1,4 @@
-# SAO_TRGB_Color_Estimate
+# TRGB_Color_Estimation
 
 ### Use 
 `conda env create -f environment.yml`
