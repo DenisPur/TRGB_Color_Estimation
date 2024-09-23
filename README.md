@@ -2,7 +2,9 @@
 
 ### Use 
 `conda env create -f environment.yml`
-to install working conda 
+
+to install working conda environment
 
 ### Run
-`main.py`
+`conda activate trgb_gui`
+`python main.py`
