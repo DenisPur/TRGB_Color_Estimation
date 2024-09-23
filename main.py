@@ -14,7 +14,7 @@ from masking_ui import Ui_Masking_Dialog
 from infra import (
     read_file, check_available_columns, 
     simple_double_view, clearing_double_view, 
-    masking_double_view, final_view, branch_double_view
+    masking_double_view, absolute_magnitude_view, branch_double_view
 )
 
 
@@ -44,7 +44,7 @@ class MainWindow(QMainWindow):
         self.ui.buttons_reddening.accepted.connect(self.write_reddening)
         self.ui.buttons_reddening.rejected.connect(self.empty_reddening)
 
-        self.ui.button_final_view.clicked.connect(self.view_final)
+        self.ui.button_final_view.clicked.connect(self.view_page1_final)
 
         # second page
         self.ui.button_view_spatial.clicked.connect(self.view_branch)
@@ -239,8 +239,8 @@ class MainWindow(QMainWindow):
         self.ui.label_redshift.setText(f'{redshift:1.4}')
         self.ui.label_absorbtion.setText(f'{absorbtion:1.4}')
     
-    def view_final(self):
-        fig = final_view(self.data, self.dist, self.redshift, self.absorbtion)
+    def view_page1_final(self):
+        fig = absolute_magnitude_view(self.data, self.dist, self.redshift, self.absorbtion)
         fig.show()
     
     def view_branch(self):

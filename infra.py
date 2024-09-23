@@ -96,7 +96,7 @@ def masking_double_view(data, mask, borders):
     return fig
 
 
-def final_view(data, dist, redshift, absorbtion):
+def absolute_magnitude_view(data, dist, redshift, absorbtion):
     fig, ax = plt.subplots(layout='tight', figsize=[8,8])
     
     data['color_vi_real'] = data['color_vi'] - redshift

@@ -477,7 +477,7 @@ class Ui_MainWindow(object):
         self.label_d_plus.setText(_translate("MainWindow", "<html><head/><body><p> δ<span style=\" vertical-align:sub;\">+</span> D<span style=\" vertical-align:super;\">m</span> = </p></body></html>"))
         self.label_d_minus.setText(_translate("MainWindow", "<html><head/><body><p> δ<span style=\" vertical-align:sub;\">-</span> D<span style=\" vertical-align:super;\">m</span> = </p></body></html>"))
         self.group_saving.setTitle(_translate("MainWindow", "Сохранение результата"))
-        self.button_save_1.setText(_translate("MainWindow", "Сохранить [pdf]"))
+        self.button_save_1.setText(_translate("MainWindow", "Сохранить [pdf + ???]"))
         self.text_fewstars.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"

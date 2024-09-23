@@ -3,3 +3,4 @@
 
 # folder with ui in html format
 ui_files
+ui_files/*
