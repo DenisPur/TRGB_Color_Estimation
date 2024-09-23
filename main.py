@@ -12,8 +12,9 @@ from main_window_ui import Ui_MainWindow
 from clearing_ui import Ui_Clearing_Dialog
 from masking_ui import Ui_Masking_Dialog
 from infra import (
-    read_file, simple_double_view, clearing_double_view, 
-    check_available_columns, masking_double_view, final_view
+    read_file, check_available_columns, 
+    simple_double_view, clearing_double_view, 
+    masking_double_view, final_view, branch_double_view
 )
 
 
@@ -44,6 +45,10 @@ class MainWindow(QMainWindow):
         self.ui.buttons_reddening.rejected.connect(self.empty_reddening)
 
         self.ui.button_final_view.clicked.connect(self.view_final)
+
+        # second page
+        self.ui.button_view_spatial.clicked.connect(self.view_branch)
+        self.ui.button_save_1.clicked.connect(self.save_1)
 
     def open_file(self):
         widget = QWidget(parent=self)
@@ -217,7 +222,7 @@ class MainWindow(QMainWindow):
             self.redshift = self.ui.enter_redshift.value()
             self.absorbtion = self.ui.enter_absorbtion.value()
         self.ui.button_final_view.setEnabled(True)
-        self.ui.button_next_tab.setEnabled(True)
+        # self.ui.button_next_tab.setEnabled(True)
 
     def empty_reddening(self):
             self.ui.enter_b_minus_v.setValue(0.0)
@@ -237,7 +242,30 @@ class MainWindow(QMainWindow):
     def view_final(self):
         fig = final_view(self.data, self.dist, self.redshift, self.absorbtion)
         fig.show()
+    
+    def view_branch(self):
+        params = {'dist':self.dist, 
+        'redshift':self.redshift, 'absorbtion':self.absorbtion, 
+        'vi_left':self.ui.enter_vi_left.value(),
+        'vi_right':self.ui.enter_vi_right.value(), 
+        'i_left':self.ui.enter_i_left.value(), 
+        'i_right':self.ui.enter_i_right.value(), 
+        'p_chosen':self.ui.enter_p.value(),
+        'd_minus':self.ui.enter_d_minus.value(), 
+        'd_plus':self.ui.enter_d_plus.value()}
+        try:
+            fig = branch_double_view(self.data, params)
+            fig.show()
+        except ValueError:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Invalid borders")
+            msg.setInformativeText('At least 1 star should be in chosen diapason.')
+            msg.setWindowTitle("Error")
+            msg.exec_()
 
+    def save_1(self):
+        pass
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
