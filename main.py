@@ -8,10 +8,10 @@ from PyQt5.QtWidgets import (
     QMainWindow, QApplication, QWidget, QDialog, QFileDialog, QMessageBox
 )
 
-from main_window_ui import Ui_MainWindow
-from clearing_ui import Ui_Clearing_Dialog
-from masking_ui import Ui_Masking_Dialog
-from infra import (
+from src.main_window_ui import Ui_MainWindow
+from src.clearing_ui import Ui_Clearing_Dialog
+from src.masking_ui import Ui_Masking_Dialog
+from src.infra import (
     read_file, check_available_columns, 
     simple_double_view, clearing_double_view, 
     masking_double_view, absolute_magnitude_view, branch_double_view
