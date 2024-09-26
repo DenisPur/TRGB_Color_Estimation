@@ -8,5 +8,5 @@ to install working conda environment
 ### Run
 ```
 conda activate trgb_gui
-python main.py
+python run.py
 ```

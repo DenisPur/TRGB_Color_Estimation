@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 
-def branch_two_step_analythis(data, params):
+def branch_two_step_analythis_support_functions(data, params):
     data['color_vi_real'] = data['color_vi'] - params['redshift']
     data['mag_i_real'] = data['mag_i'] - params['dist'] - params['absorbtion']
     
@@ -57,7 +57,7 @@ def branch_two_step_analythis(data, params):
 def calculate_branch_double_chart(data, params):
     fig, axs = plt.subplots(1, 2, layout='tight', figsize=[12,6])
     
-    chosen_bool, inliers_bool, f, f_std = branch_two_step_analythis(data, params)
+    chosen_bool, inliers_bool, f, f_std = branch_two_step_analythis_support_functions(data, params)
     
     chosen = data[chosen_bool]
     non_chosen = data[~chosen_bool]
