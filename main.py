@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import (
     QMainWindow, QApplication, QWidget, QDialog, QFileDialog, QMessageBox
 )
@@ -11,10 +10,16 @@ from PyQt5.QtWidgets import (
 from src.main_window_ui import Ui_MainWindow
 from src.clearing_ui import Ui_Clearing_Dialog
 from src.masking_ui import Ui_Masking_Dialog
+
 from src.infra import (
-    read_file, check_available_columns, 
-    simple_double_view, clearing_double_view, 
-    masking_double_view, absolute_magnitude_view, branch_double_view
+    read_file, check_available_columns 
+)
+from src.simple_charts import (   
+    get_raw_chart, gat_clearing_chart, 
+    get_masking_chart, get_abs_mag_chart
+)
+from src.branch_approximation import (
+    branch_two_step_analythis, calculate_branch_double_chart
 )
 
 
@@ -70,7 +75,7 @@ class MainWindow(QMainWindow):
                 msg.exec_()
 
     def first_preview(self):
-        simple_double_view(self.data)
+        get_raw_chart(self.data)
 
     def view_clearing_result(self):
         self.clearing_res.show()
@@ -121,14 +126,14 @@ class MainWindow(QMainWindow):
             marking = mark_clean_rows()
             clean_data = self.data[marking]
             dirty_data = self.data[~marking]
-            fig = clearing_double_view(clean=clean_data, dirty=dirty_data)
+            fig = gat_clearing_chart(clean=clean_data, dirty=dirty_data)
             fig.show()
 
         def saving():
             marking = mark_clean_rows()
             clean_data = self.data[marking]
             dirty_data = self.data[~marking]
-            self.clearing_res = clearing_double_view(clean=clean_data, dirty=dirty_data)
+            self.clearing_res = gat_clearing_chart(clean=clean_data, dirty=dirty_data)
             self.data = self.data[marking]
             self.ui.button_view_clearing.setEnabled(True)
             self.ui.group_masking.setEnabled(True)
@@ -176,12 +181,12 @@ class MainWindow(QMainWindow):
 
         def preview():
             borders, masking = apply_mask()
-            fig = masking_double_view(self.data, masking, borders)
+            fig = get_masking_chart(self.data, masking, borders)
             fig.show()
 
         def saving():
             borders, masking = apply_mask()
-            self.masking_res = masking_double_view(self.data, masking, borders)
+            self.masking_res = get_masking_chart(self.data, masking, borders)
             self.data = self.data[masking]
             self.ui.button_view_masking.setEnabled(True)
             self.ui.group_distance.setEnabled(True)
@@ -240,7 +245,7 @@ class MainWindow(QMainWindow):
         self.ui.label_absorbtion.setText(f'{absorbtion:1.4}')
     
     def view_page1_final(self):
-        fig = absolute_magnitude_view(self.data, self.dist, self.redshift, self.absorbtion)
+        fig = get_abs_mag_chart(self.data, self.dist, self.redshift, self.absorbtion)
         fig.show()
     
     def view_branch(self):
@@ -254,7 +259,7 @@ class MainWindow(QMainWindow):
         'd_minus':self.ui.enter_d_minus.value(), 
         'd_plus':self.ui.enter_d_plus.value()}
         try:
-            fig = branch_double_view(self.data, params)
+            fig = calculate_branch_double_chart(self.data, params)
             fig.show()
         except ValueError:
             msg = QMessageBox()
