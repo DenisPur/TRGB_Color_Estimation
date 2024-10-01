@@ -1,0 +1,17 @@
+pgc	    P	Name/CMD	D814	HST	    Cam	    T814	T8_lo	T8_hi	555-814	ea_lo	ea_hi	TRGB	T_lo	T_hi	V-I	    e_lo	e_hi	E1_B-V	E2_B-V	A_814	M_TRGB	DM_tip	eDM_lo	eDM_hi
+3844	1	IC1613		0.76	7496	WFPC2	20.40	20.37	20.46	1.50	1.46	1.53	20.37	20.33	20.43	1.52	1.48	1.55	0.022		    0.039	-4.03	24.39	24.35	24.46							
+
+pgc	    P	Name/CMD	D814	HST	    Cam	    T814	T8_lo	T8_hi	606-814	eb_lo	eb_hi	TRGB	T_lo	T_hi	V-I	    e_lo	e_hi	E1_B-V	E2_B-V	A_814	M_TRGB	DM_tip	eDM_lo	eDM_hi	
+11329	1	NGC1156		6.87	15922	ACS	    25.46	25.40	25.53	1.42	1.39	1.46	25.47	25.41	25.54	1.83	1.78	1.88	0.198		    0.342	-4.06	29.19	29.08	29.30
+
+pgc	    P	Name/CMD	    D814	HSTd	Cam	DT814	T8_lo	T8_hi	606-814	eb_lo	eb_hi	TRGB	T_lo	T_hi	V-I	    e_lo	e_hi	E1_B-V	E2_B-V	A_814	M_TRGB	DM_tip	eDM_lo	eDM_hi
+5057231	1	ANDROMEDA-21	0.82	13699	ACS	20.61	20.20	20.75	1.13	1.00	1.18	20.62	20.21	20.76	1.48	1.32	1.54	0.082		    0.141	-4.10	24.57	24.15	24.73	
+
+pgc	    P	Name/CMD	D814	HST	    Cam	    T814	T8_lo	T8_hi	555-814	ea_lo	ea_hi	TRGB	T_lo	T_hi	V-I	    e_lo	e_hi	E1_B-V	E2_B-V	A_814	M_TRGB	DM_tip	eDM_lo	eDM_hi	
+71538	1	Pegasus		0.97	5915	WFPC2	21.03	20.98	21.12	1.73	1.70	1.77	20.99	20.95	21.08	1.76	1.72	1.79	0.058		    0.102	-4.00	24.93	24.88	25.02
+
+pgc	    P	Name/CMD	D814	HST 	Cam	    T814	T8_lo	T8_hi	555-814	ea_lo	ea_hi	TRGB	T_lo	T_hi	V-I	    e_lo	e_hi	E1_B-V	E2_B-V	A_814	M_TRGB	DM_tip	eDM_lo	eDM_hi	
+69519	1	Tucana		0.92	5423	WFPC2	20.86	20.82	20.87	1.53	1.51	1.55	20.82	20.78	20.84	1.55	1.53	1.57	0.028		    0.049	-4.03	24.82	24.78	24.85																						
+
+pgc	    P	Name/CMD	D814	HST	    Cam	    T814	T8_lo	T8_hi	606-814	eb_lo	eb_hi	TRGB	T_lo	T_hi	V-I	    e_lo	e_hi	E1_B-V	E2_B-V	A_814	M_TRGB	DM_tip	eDM_lo	eDM_hi
+35856	1	NGC3738		5.31	12546	ACS		24.58	24.55	24.60	1.20	1.19	1.21	24.58	24.56	24.60	1.57	1.55	1.58	0.009		    0.016	-4.07	28.62	28.60	28.64		

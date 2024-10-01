@@ -11,9 +11,7 @@ from src.main_window_ui import Ui_MainWindow
 from src.clearing_ui import Ui_Clearing_Dialog
 from src.masking_ui import Ui_Masking_Dialog
 
-from src.infra import (
-    read_file, check_available_columns 
-)
+from src.infra import read_file, check_available_columns 
 from src.simple_charts import (   
     get_raw_chart, gat_clearing_chart, 
     get_masking_chart, get_abs_mag_chart
@@ -21,8 +19,9 @@ from src.simple_charts import (
 from src.branch_approximation import (
     branch_two_step_analythis_support_functions, calculate_branch_double_chart
 )
-from src.denisty_approximation import (
-    get_density_chart
+from src.denisty_approximation import get_density_chart, density_choosing_region
+from src.monte_carlo import (
+    plot_histogrm_3x3, iterate_over_n_experiments, plot_monte_carlo_results
 )
 
 
@@ -32,6 +31,10 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
+        self.ui.main_tabs.setTabEnabled(1, False)
+        self.ui.main_tabs.setTabEnabled(2, False)
+
+        # first page
         self.ui.button_chose_file.clicked.connect(self.open_file)
         self.ui.button_view_chosen.clicked.connect(self.first_preview)
 
@@ -58,7 +61,7 @@ class MainWindow(QMainWindow):
         self.ui.button_view_spatial.clicked.connect(self.view_branch)
         self.ui.button_save_1.clicked.connect(self.save_1)
 
-        # trird page
+        # third page
         self.ui.button_view_density.clicked.connect(self.view_density)
         self.ui.button_save_2.clicked.connect(self.save_2) 
 
@@ -66,12 +69,20 @@ class MainWindow(QMainWindow):
         widget = QWidget(parent=self)
         self.file_path, _ = QFileDialog.getOpenFileName(widget, 'Open File')
         if self.file_path:
-            print(self.file_path)
             try:
                 self.data = read_file(self.file_path)
                 self.ui.label_filename.setText(self.file_path)
                 self.ui.button_view_chosen.setEnabled(True)
                 self.ui.group_clearing.setEnabled(True)
+
+                plt.close('all') # should prevent opening of a lot plt-windows when a new file is chosen
+                self.ui.button_view_clearing.setEnabled(False)
+                self.ui.group_masking.setEnabled(False)
+                self.ui.button_view_masking.setEnabled(False)
+                self.ui.group_distance.setEnabled(False)
+                self.ui.group_reddening.setEnabled(False)
+                self.ui.button_final_view.setEnabled(False)
+                self.ui.check_add_kde_1.setEnabled(False)
 
             except pd.errors.ParserError:
                 msg = QMessageBox()
@@ -82,7 +93,8 @@ class MainWindow(QMainWindow):
                 msg.exec_()
 
     def first_preview(self):
-        get_raw_chart(self.data)
+        fig = get_raw_chart(self.data)
+        fig.show()
 
     def view_clearing_result(self):
         self.clearing_res.show()
@@ -144,6 +156,7 @@ class MainWindow(QMainWindow):
             self.data = self.data[marking]
             self.ui.button_view_clearing.setEnabled(True)
             self.ui.group_masking.setEnabled(True)
+            self.ui.group_distance.setEnabled(True)
 
         window.ui.button_preview.clicked.connect(preview)
         window.ui.buttonBox.accepted.connect(saving)
@@ -234,7 +247,9 @@ class MainWindow(QMainWindow):
             self.redshift = self.ui.enter_redshift.value()
             self.absorbtion = self.ui.enter_absorbtion.value()
         self.ui.button_final_view.setEnabled(True)
-        # self.ui.button_next_tab.setEnabled(True)
+        self.ui.check_add_kde_1.setEnabled(True)
+        self.ui.main_tabs.setTabEnabled(1, True)
+        self.ui.main_tabs.setTabEnabled(2, True)
 
     def empty_reddening(self):
             self.ui.enter_b_minus_v.setValue(0.0)
@@ -242,8 +257,8 @@ class MainWindow(QMainWindow):
             self.ui.enter_coef_2.setValue(1.505)
             self.ui.enter_redshift.setValue(0.0)
             self.ui.enter_absorbtion.setValue(0.0)
-            self.ui.label_redshift.setText('na')
-            self.ui.label_absorbtion.setText('na')
+            self.ui.label_redshift.setText('0.0')
+            self.ui.label_absorbtion.setText('0.0')
     
     def recalculate_reddening_labels(self):
         redshift = self.ui.enter_b_minus_v.value() * self.ui.enter_coef_1.value()
@@ -252,7 +267,8 @@ class MainWindow(QMainWindow):
         self.ui.label_absorbtion.setText(f'{absorbtion:1.4}')
     
     def view_page1_final(self):
-        fig = get_abs_mag_chart(self.data, self.dist, self.redshift, self.absorbtion)
+        add_kde = self.ui.check_add_kde_1.checkState() == 2
+        fig = get_abs_mag_chart(self.data, self.dist, self.redshift, self.absorbtion, add_kde)
         fig.show()
     
     def view_branch(self):
@@ -260,7 +276,7 @@ class MainWindow(QMainWindow):
             'dist':self.dist, 
             'redshift':self.redshift,
             'absorbtion':self.absorbtion, 
-            'i_level':self.ui.enter_i_left.value(),
+            'i_level':self.ui.enter_level.value(),
             'vi_left':self.ui.enter_vi_left.value(),
             'vi_right':self.ui.enter_vi_right.value(), 
             'i_left':self.ui.enter_i_left.value(), 
@@ -270,6 +286,7 @@ class MainWindow(QMainWindow):
             'd_plus':self.ui.enter_d_plus.value()
         }
         try:
+            print(params['i_level'])
             fig = calculate_branch_double_chart(self.data, params)
             fig.show()
         except ValueError:
@@ -283,7 +300,7 @@ class MainWindow(QMainWindow):
     def save_1(self):
         pass
 
-    def view_density(self):
+    def pack_all_density_parameters_in_dict(self):
         params = {
             'dist':self.dist, 
             'redshift':self.redshift,
@@ -295,14 +312,39 @@ class MainWindow(QMainWindow):
             'vi_right':self.ui.enter_vi_right_2.value(),
             's_scaler':self.ui.enter_s.value(),
         }
+        chosen_bool, i_level_low, i_level_high, mean_i_error, mean_color_error = density_choosing_region(self.data, params)
+        params['chosen_bool'] = chosen_bool
+        params['i_level_low'] = i_level_low
+        params['i_level_high'] = i_level_high
+        params['mean_i_error'] = mean_i_error
+        params['mean_color_error'] = mean_color_error
+        return params
 
-        fig = get_density_chart(self.data, params)
-        fig.show()
-        # except:
-            # print('fail')
+    def view_density(self):
+        params = self.pack_all_density_parameters_in_dict()
+        try:
+            fig = get_density_chart(self.data, params)
+            fig.show()
+        except ValueError:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Invalid borders")
+            msg.setInformativeText('At least 1 star should be in chosen diapason.')
+            msg.setWindowTitle("Error")
+            msg.exec_()
 
     def save_2(self):
-        pass
+        params = self.pack_all_density_parameters_in_dict()
+        # fig1 = plot_histogrm_3x3(self.data, params)
+        # fig1.show()
+        n = 1000
+        results = iterate_over_n_experiments(self.data, params, n)
+        color_mean = results.mean()
+        color_error = ((results - color_mean)**2).mean()**0.5
+
+        fig2 = plot_monte_carlo_results(results, color_mean, color_error, n)
+        fig2.show()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

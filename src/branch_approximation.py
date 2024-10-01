@@ -90,10 +90,11 @@ def calculate_branch_double_chart(data, params):
 
     d_m = params['d_minus']
     d_p = params['d_plus']
+    i_level = params['i_level']
 
-    estimate = f(-3.5)
-    estimate_up = f(-3.5+d_p) - f_std(-3.5+d_p)
-    estimate_low = f(-3.5-d_m) + f_std(-3.5-d_m)
+    estimate = f(i_level)
+    estimate_up = f(i_level+d_p) - f_std(i_level+d_p)
+    estimate_low = f(i_level-d_m) + f_std(i_level-d_m)
 
     sns.scatterplot(data=inliers, 
                     x='mag_i_real', y='color_vi_real', 
@@ -106,11 +107,11 @@ def calculate_branch_double_chart(data, params):
     axs[1].plot(x_linspace, y, c='xkcd:forest green', alpha=0.9)
     axs[1].fill_between(x_linspace, y-y_err, y+y_err, alpha=0.3, color='xkcd:teal')
 
-    axs[1].plot([-3.5, -3.5], [params['vi_left'], params['vi_right']],
+    axs[1].plot([i_level, i_level], [params['vi_left'], params['vi_right']],
                 lw=1, ls=':', color='black')
-    axs[1].plot([-3.5+d_p, -3.5+d_p], [params['vi_left'], params['vi_right']],
+    axs[1].plot([i_level+d_p, i_level+d_p], [params['vi_left'], params['vi_right']],
                 lw=1, ls=':', color='black')
-    axs[1].plot([-3.5-d_m, -3.5-d_m], [params['vi_left'], params['vi_right']],
+    axs[1].plot([i_level-d_m, i_level-d_m], [params['vi_left'], params['vi_right']],
                 lw=1, ls=':', color='black')
 
     axs[1].plot([params['i_left'], params['i_right']], [estimate, estimate],

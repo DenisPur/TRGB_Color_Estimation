@@ -5,9 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 
 
-def get_density_chart(data, params):
-    fig, axs = plt.subplots(2, 1, sharex=True, layout='tight', figsize=[8,8])
-
+def density_choosing_region(data, params):
     data['color_vi_real'] = data['color_vi'] - params['redshift']
     data['mag_i_real'] = data['mag_i'] - params['dist'] - params['absorbtion']
 
@@ -28,9 +26,19 @@ def get_density_chart(data, params):
                    (data['color_vi_real'] <= params['vi_right']) & 
                    (data['mag_i_real'] >= i_level_low) & 
                    (data['mag_i_real'] <= i_level_high))
+    return chosen_bool, i_level_low, i_level_high, mean_i_error, mean_color_error
 
-    chosen = data[chosen_bool]
-    non_chosen = data[~chosen_bool]
+
+def get_density_chart(data, params):
+    fig, axs = plt.subplots(2, 1, sharex=True, layout='tight', figsize=[8,8])
+
+    i_level_low = params['i_level_low']
+    i_level_high = params['i_level_high']
+    vi_left = params['vi_left']
+    vi_right = params['vi_right']
+
+    chosen = data[params['chosen_bool']]
+    non_chosen = data[~params['chosen_bool']]
 
     sns.scatterplot(data=non_chosen, 
                     x='color_vi_real', y='mag_i_real', 
@@ -41,20 +49,24 @@ def get_density_chart(data, params):
                     alpha=0.8, s=5, color='xkcd:royal blue',
                     ax=axs[0])
     axs[0].plot(
-        [params['vi_left'], params['vi_left'], params['vi_right'], params['vi_right'], params['vi_left']],
+        [vi_left, vi_left, vi_right, vi_right, vi_left],
         [i_level_low, i_level_high, i_level_high, i_level_low, i_level_low],
         lw=1, ls=':', color='black'
     )
 
-    axs[0].errorbar((params['vi_left'] + params['vi_right'])/2, params['i_level'], 
-                    xerr=mean_color_error, yerr=mean_i_error,
-                    color='xkcd:dark purple',
-                    label=f'$\Delta$I    : {mean_i_error:1.3f} \n$\Delta$V-I : {mean_color_error:1.3f}')
+    axs[0].errorbar(
+        (vi_left + vi_right)/2, 
+        params['i_level'], 
+        xerr=params['mean_color_error'], 
+        yerr=params['mean_i_error'],
+        color='xkcd:dark purple',
+        label=f'$\Delta$I    : {params["mean_i_error"]:1.3f} \n$\Delta$V-I : {params["mean_color_error"]:1.3f}'
+    )
 
     vertical_offset = 0.5
     horizontal_offset = 0.1
-    axs[0].set_xlim(params['vi_left']-horizontal_offset, params['vi_right']+horizontal_offset)
-    axs[0].set_ylim(i_level_low-vertical_offset, i_level_high+vertical_offset)
+    axs[0].set_xlim(vi_left - horizontal_offset, vi_right + horizontal_offset)
+    axs[0].set_ylim(i_level_low - vertical_offset, i_level_high + vertical_offset)
     axs[0].set_xlabel('V-I (real) $_{[mag]}$', size=12)
     axs[0].set_ylabel('$M_I$ $_{[mag]}$', size=12)
     axs[0].grid(linestyle=':')
@@ -69,7 +81,7 @@ def get_density_chart(data, params):
 
     x_points_num = 200
     x_linspace = np.linspace(start=params['vi_left'], stop=params['vi_right'], num=x_points_num)
-    bw_by_error = 2 * np.sqrt(mean_v_error**2 + mean_i_error**2) / (params['vi_right'] - params['vi_left'])
+    bw_by_error = 2 * params['mean_color_error'] / (params['vi_right'] - params['vi_left'])
     kde_estimator = gaussian_kde(chosen['color_vi_real'].values, bw_method=bw_by_error)
     y_kde = kde_estimator.evaluate(x_linspace)
     x_max_y_value = np.argmax(y_kde) / (x_points_num - 1) * (params['vi_right'] - params['vi_left']) + params['vi_left']

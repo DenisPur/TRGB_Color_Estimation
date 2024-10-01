@@ -41,12 +41,14 @@ class Ui_Masking_Dialog(object):
 
         self.enter_x_left = QtWidgets.QDoubleSpinBox(Dialog)
         self.enter_x_left.setDecimals(1)
+        self.enter_x_left.setSingleStep(10)
         self.enter_x_left.setProperty("value", 0.0)
         self.enter_x_left.setObjectName("enter_x_left")
         self.gridLayout_2.addWidget(self.enter_x_left, 1, 1, 1, 1)
 
         self.enter_x_right = QtWidgets.QDoubleSpinBox(Dialog)
         self.enter_x_right.setDecimals(1)
+        self.enter_x_right.setSingleStep(10)
         self.enter_x_right.setObjectName("enter_x_right")
         self.gridLayout_2.addWidget(self.enter_x_right, 1, 3, 1, 1)
 
@@ -62,7 +64,7 @@ class Ui_Masking_Dialog(object):
 
         self.enter_y_bottom = QtWidgets.QDoubleSpinBox(Dialog)
         self.enter_y_bottom.setDecimals(1)
-        self.enter_y_bottom.setSingleStep(0.1)
+        self.enter_y_bottom.setSingleStep(10)
         self.enter_y_bottom.setProperty("value", 0.0)
         self.enter_y_bottom.setObjectName("enter_y_bottom")
         self.gridLayout.addWidget(self.enter_y_bottom, 3, 1, 1, 1)
@@ -81,6 +83,7 @@ class Ui_Masking_Dialog(object):
 
         self.enter_y_top = QtWidgets.QDoubleSpinBox(Dialog)
         self.enter_y_top.setDecimals(1)
+        self.enter_y_top.setSingleStep(10)
         self.enter_y_top.setObjectName("enter_y_top")
         self.gridLayout.addWidget(self.enter_y_top, 3, 3, 1, 1)
         spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
