@@ -7,7 +7,3 @@ ui_files/*
 
 # testing
 test.py
-
-# photometry files
-convert_phot_to_csv/converted
-convert_phot_to_csv/raw
