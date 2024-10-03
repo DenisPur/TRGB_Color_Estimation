@@ -54,11 +54,9 @@ def branch_two_step_analythis_support_functions(data, params):
     return chosen_bool, inliers_bool, f, f_std
 
 
-def calculate_branch_double_chart(data, params):
+def calculate_branch_double_chart(data, params, chosen_bool, inliers_bool, f_approx, f_std):
     fig, axs = plt.subplots(1, 2, layout='tight', figsize=[12,6])
-    
-    chosen_bool, inliers_bool, f, f_std = branch_two_step_analythis_support_functions(data, params)
-    
+       
     chosen = data[chosen_bool]
     non_chosen = data[~chosen_bool]
 
@@ -85,16 +83,16 @@ def calculate_branch_double_chart(data, params):
 
     x_linspace = np.linspace(start=params['i_left'], 
                              stop=params['i_right'], num=50)
-    y = [f(x) for x in x_linspace]
+    y = [f_approx(x) for x in x_linspace]
     y_err = np.array([f_std(x) for x in x_linspace])
 
     d_m = params['d_minus']
     d_p = params['d_plus']
     i_level = params['i_level']
 
-    estimate = f(i_level)
-    estimate_up = f(i_level+d_p) - f_std(i_level+d_p)
-    estimate_low = f(i_level-d_m) + f_std(i_level-d_m)
+    estimate = f_approx(i_level)
+    estimate_up = f_approx(i_level+d_p) - f_std(i_level+d_p)
+    estimate_low = f_approx(i_level-d_m) + f_std(i_level-d_m)
 
     sns.scatterplot(data=inliers, 
                     x='mag_i_real', y='color_vi_real', 

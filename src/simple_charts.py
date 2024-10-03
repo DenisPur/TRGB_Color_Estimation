@@ -5,7 +5,7 @@ from matplotlib.colors import Normalize
 import seaborn as sns
 
 
-def get_raw_chart(data):
+def get_overview_chart(data):
     fig, axs = plt.subplots(1, 2, layout='tight', figsize=[12,7])
     
     low = np.percentile(data['color_vi'].values, 1.5)
@@ -22,9 +22,10 @@ def get_raw_chart(data):
                     ax=axs[0])
     sm = plt.cm.ScalarMappable(cmap=palette, norm=norm)
     axs[0].figure.colorbar(sm, ax=axs[0], 
-                           location='right',
+                           location='bottom',
                            fraction=0.03,
-                           pad=0.01)
+                           pad=0.10,
+                           label='V-I $_{[mag]}$')
     axs[0].set_xlabel('x $_{[px]}$', size = 12)
     axs[0].set_ylabel('y $_{[px]}$', size = 12)
     axs[0].grid(linestyle=':')
@@ -39,7 +40,6 @@ def get_raw_chart(data):
     axs[1].invert_yaxis()
     axs[1].grid(linestyle=':')
     axs[1].set_title('CMD')
-    fig.suptitle('Raw data')
     return fig
 
 

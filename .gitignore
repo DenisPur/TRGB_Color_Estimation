@@ -7,3 +7,7 @@ ui_files/*
 
 # testing
 test.py
+
+# results
+*.pdf
+*.json

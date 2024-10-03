@@ -2,6 +2,8 @@ import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+import json
 
 from PyQt5.QtWidgets import (
     QMainWindow, QApplication, QWidget, QDialog, QFileDialog, QMessageBox
@@ -13,7 +15,7 @@ from src.masking_ui import Ui_Masking_Dialog
 
 from src.infra import read_file, check_available_columns 
 from src.simple_charts import (   
-    get_raw_chart, gat_clearing_chart, 
+    get_overview_chart, gat_clearing_chart, 
     get_masking_chart, get_abs_mag_chart
 )
 from src.branch_approximation import (
@@ -59,7 +61,7 @@ class MainWindow(QMainWindow):
 
         # second page
         self.ui.button_view_spatial.clicked.connect(self.view_branch)
-        self.ui.button_save_1.clicked.connect(self.save_1)
+        self.ui.button_save_1.clicked.connect(self.save_branch_approx)
 
         # third page
         self.ui.button_view_density.clicked.connect(self.view_density)
@@ -74,6 +76,10 @@ class MainWindow(QMainWindow):
                 self.ui.label_filename.setText(self.file_path)
                 self.ui.button_view_chosen.setEnabled(True)
                 self.ui.group_clearing.setEnabled(True)
+
+                self.fig_raw = get_overview_chart(self.data)
+                self.fig_raw.suptitle('Raw data')
+
 
                 plt.close('all') # should prevent opening of a lot plt-windows when a new file is chosen
                 self.ui.button_view_clearing.setEnabled(False)
@@ -93,14 +99,13 @@ class MainWindow(QMainWindow):
                 msg.exec_()
 
     def first_preview(self):
-        fig = get_raw_chart(self.data)
-        fig.show()
+        self.fig_raw.show()
 
     def view_clearing_result(self):
-        self.clearing_res.show()
+        self.fig_clear.show()
 
     def view_masking_result(self):
-        self.masking_res.show()
+        self.fig_mask.show()
 
     def open_clearing_dialog(self):
         window = QDialog(parent=self)
@@ -152,7 +157,7 @@ class MainWindow(QMainWindow):
             marking = mark_clean_rows()
             clean_data = self.data[marking]
             dirty_data = self.data[~marking]
-            self.clearing_res = gat_clearing_chart(clean=clean_data, dirty=dirty_data)
+            self.fig_clear = gat_clearing_chart(clean=clean_data, dirty=dirty_data)
             self.data = self.data[marking]
             self.ui.button_view_clearing.setEnabled(True)
             self.ui.group_masking.setEnabled(True)
@@ -206,7 +211,7 @@ class MainWindow(QMainWindow):
 
         def saving():
             borders, masking = apply_mask()
-            self.masking_res = get_masking_chart(self.data, masking, borders)
+            self.fig_mask = get_masking_chart(self.data, masking, borders)
             self.data = self.data[masking]
             self.ui.button_view_masking.setEnabled(True)
             self.ui.group_distance.setEnabled(True)
@@ -233,6 +238,7 @@ class MainWindow(QMainWindow):
 
     def write_distance(self):
         self.dist = self.ui.enter_mags.value()
+        self.dist_in_mpcs = self.ui.enter_mpcs.value()
         self.ui.group_reddening.setEnabled(True)
 
     def empty_distance(self):
@@ -271,7 +277,9 @@ class MainWindow(QMainWindow):
         fig = get_abs_mag_chart(self.data, self.dist, self.redshift, self.absorbtion, add_kde)
         fig.show()
     
-    def view_branch(self):
+    ##########################################################################
+    
+    def pack_all_branch_approx_parameters_in_dict(self):
         params = {
             'dist':self.dist, 
             'redshift':self.redshift,
@@ -285,9 +293,13 @@ class MainWindow(QMainWindow):
             'd_minus':self.ui.enter_d_minus.value(), 
             'd_plus':self.ui.enter_d_plus.value()
         }
+        return params
+
+    def view_branch(self):
+        params = self.pack_all_branch_approx_parameters_in_dict()
         try:
-            print(params['i_level'])
-            fig = calculate_branch_double_chart(self.data, params)
+            chosen_bool, inliers_bool, f_approx, f_std = branch_two_step_analythis_support_functions(self.data, params)
+            fig = calculate_branch_double_chart(self.data, params, chosen_bool, inliers_bool, f_approx, f_std)
             fig.show()
         except ValueError:
             msg = QMessageBox()
@@ -297,8 +309,61 @@ class MainWindow(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
 
-    def save_1(self):
-        pass
+    def save_branch_approx(self):
+        fig_new_overview = get_overview_chart(self.data)
+        fig_new_overview.suptitle('Cleaned data')
+
+        add_kde = self.ui.check_add_kde_1.checkState() == 2
+        fig_absmag = get_abs_mag_chart(self.data, self.dist, self.redshift, self.absorbtion, add_kde)
+
+        params = self.pack_all_branch_approx_parameters_in_dict()
+        chosen_bool, inliers_bool, f_approx, f_std = branch_two_step_analythis_support_functions(self.data, params)
+        
+        fig_result = calculate_branch_double_chart(self.data, params, chosen_bool, inliers_bool, f_approx, f_std)
+        
+        d_m = params['d_minus']
+        d_p = params['d_plus']
+        i_mag = params['i_level']
+
+        estimate = f_approx(i_mag)
+        estimate_high = f_approx(i_mag+d_p) - f_std(i_mag+d_p)
+        estimate_low = f_approx(i_mag-d_m) + f_std(i_mag-d_m)
+
+        data = {
+            'method' : 'approximation of a branch by a parabola',
+            'filename' : self.file_path,
+            'I mag level' : params['i_level'],
+            '(V-I) color estimate' : estimate,
+            '(V-I) color estimate low' : estimate_low,
+            '(V-I) color estimate high' : estimate_high,
+            'distance [in mag]' : params['dist'],
+            'distance low' : params['dist'] - d_m,
+            'distance high' : params['dist'] + d_p,
+            'distance [in mpcs]' : self.dist_in_mpcs,
+            'absorbtion (I)' : params['absorbtion'],
+            'redshift (V-I)' : params['redshift'],
+            'paramters' : {
+                'vi_left': params['vi_left'],
+                'vi_right': params['vi_right'], 
+                'i_top': params['i_left'], 
+                'i_bottom': params['i_right'], 
+                'p_chosen': params['p_chosen'],
+                }
+        }
+
+        filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON', 'output')
+        with open(filename, "w") as out_file:
+            json.dump(data, out_file, indent=4)
+
+        figures = [self.fig_raw, fig_new_overview, fig_absmag, fig_result]
+        filename, _ = QFileDialog.getSaveFileName(self, 'Save PDF', 'output')
+        pp = PdfPages(filename)
+        for fig in figures:
+            pp.savefig(fig)
+        pp.close()
+        # plt.close('all')
+
+    ##########################################################################
 
     def pack_all_density_parameters_in_dict(self):
         params = {
