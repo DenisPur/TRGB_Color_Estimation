@@ -65,7 +65,7 @@ def iterate_over_n_experiments(data, params, n):
     data_s['color'] = data_s['mag_v'] - data_s['mag_i'] - params['redshift']
     data_s['mag'] = data_s['mag_i'] - params['dist'] - params['absorbtion']
     
-    x_linspace = np.linspace(params['vi_left'], params['vi_right'], num=100)
+    x_linspace = np.linspace(params['vi_left'], params['vi_right'], num=300)
     bw = 2 * params['mean_color_error'] / (params['vi_right'] - params['vi_left'])
     
     results = list()
@@ -93,7 +93,7 @@ def plot_monte_carlo_results(experiments_results, mean_color, std_err, n):
 
     fig, ax = plt.subplots(figsize=[8,8])
 
-    ax.hist(experiments_results, bins=30, color='xkcd:light teal', density=True, alpha=0.8)
+    ax.hist(experiments_results, color='xkcd:light teal', density=True, alpha=0.8)
 
     x_left, x_right = plt.gca().get_xlim()
     y_bottom, y_top = plt.gca().get_ylim()

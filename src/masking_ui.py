@@ -14,7 +14,7 @@ class Ui_Masking_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(360, 300)
-        Dialog.setWindowTitle("Создание маски")
+        Dialog.setWindowTitle("Adding a mask")
         self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.text_instructions = QtWidgets.QTextBrowser(Dialog)
@@ -120,7 +120,7 @@ class Ui_Masking_Dialog(object):
         self.label_y_min.setText(_translate("Dialog", "<html><head/><body><p align=\"center\">min</p></body></html>"))
         self.label_y.setText(_translate("Dialog", "<html><head/><body><p align=\"center\">≤ y ≤ </p></body></html>"))
         self.label_y_max.setText(_translate("Dialog", "<html><head/><body><p align=\"center\">max</p></body></html>"))
-        self.button_preview.setText(_translate("Dialog", "Предпросмотр"))
+        self.button_preview.setText(_translate("Dialog", "Preview"))
 
 
 if __name__ == "__main__":

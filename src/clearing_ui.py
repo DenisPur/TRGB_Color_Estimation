@@ -14,7 +14,7 @@ class Ui_Clearing_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(360, 360)
-        Dialog.setWindowTitle("Критерии очистки")
+        Dialog.setWindowTitle("Photometry cleaning criteria")
         self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.text_instructions = QtWidgets.QTextBrowser(Dialog)
@@ -159,7 +159,7 @@ class Ui_Clearing_Dialog(object):
         self.label_flag.setText(_translate("Dialog", "<html><head/><body><p align=\"right\">flag <span style=\" vertical-align:sub;\">V</span> &amp; flag <span style=\" vertical-align:sub;\">I</span> ≤ </p></body></html>"))
         self.label_snr.setText(_translate("Dialog", "<html><head/><body><p align=\"right\">s/n ratio ≥ </p></body></html>"))
         self.label_sharp.setText(_translate("Dialog", "<html><head/><body><p align=\"right\">( sharp <span style=\" vertical-align:sub;\">V</span> + sharp <span style=\" vertical-align:sub;\">I </span>)<span style=\" vertical-align:super;\">2</span> ≤ </p></body></html>"))
-        self.button_preview.setText(_translate("Dialog", "Предпросмотр"))
+        self.button_preview.setText(_translate("Dialog", "Preview"))
 
 
 if __name__ == "__main__":

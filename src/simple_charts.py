@@ -5,7 +5,7 @@ from matplotlib.colors import Normalize
 import seaborn as sns
 
 
-def get_overview_chart(data):
+def get_overview_chart(data, point_size=2):
     fig, axs = plt.subplots(1, 2, layout='tight', figsize=[12,7])
     
     low = np.percentile(data['color_vi'].values, 1.5)
@@ -18,7 +18,7 @@ def get_overview_chart(data):
     sns.scatterplot(data=data, x='x', y='y', 
                     hue='color_vi', palette=palette,
                     hue_norm=Normalize(vmin=low, vmax=upp, clip=False),
-                    alpha=0.8, s=2, 
+                    alpha=0.8, s=point_size, 
                     ax=axs[0])
     sm = plt.cm.ScalarMappable(cmap=palette, norm=norm)
     axs[0].figure.colorbar(sm, ax=axs[0], 
@@ -33,7 +33,7 @@ def get_overview_chart(data):
     axs[0].set_title('Instrument field (with (V-I) colors)')
 
     sns.scatterplot(data=data, x='color_vi', y='mag_i',
-                    alpha=0.8, s=2, c='xkcd:teal',
+                    alpha=0.8, s=point_size, c='xkcd:teal',
                     ax=axs[1])
     axs[1].set_xlabel('V-I $_{[mag]}$', size = 12)
     axs[1].set_ylabel('$m_I$ $_{[mag]}$', size = 12)
@@ -43,13 +43,13 @@ def get_overview_chart(data):
     return fig
 
 
-def gat_clearing_chart(clean, dirty):
+def gat_clearing_chart(clean, dirty, point_size=2):
     fig, axs = plt.subplots(1, 2, layout='tight', figsize=[12,7])
     sns.scatterplot(data=clean, x='x', y='y', 
-                    alpha=0.8, s=2, c='xkcd:teal',
+                    alpha=0.8, s=point_size, c='xkcd:teal',
                     ax=axs[0])
     sns.scatterplot(data=dirty, x='x', y='y', 
-                    alpha=0.4, s=2, c='red',
+                    alpha=0.4, s=point_size, c='red',
                     ax=axs[0])
     axs[0].set_xlabel('x $_{[px]}$', size = 12)
     axs[0].set_ylabel('y $_{[px]}$', size = 12)
@@ -57,10 +57,10 @@ def gat_clearing_chart(clean, dirty):
     axs[0].set_title('Instrument field')
 
     sns.scatterplot(data=clean, x='color_vi', y='mag_i', 
-                    alpha=0.8, s=2, c='xkcd:teal',
+                    alpha=0.8, s=point_size, c='xkcd:teal',
                     ax=axs[1])
     sns.scatterplot(data=dirty, x='color_vi', y='mag_i', 
-                    alpha=0.4, s=2, c='red',
+                    alpha=0.4, s=point_size, c='red',
                     ax=axs[1])
     axs[1].set_xlabel('V-I $_{[mag]}$', size = 12)
     axs[1].set_ylabel('$m_I$ $_{[mag]}$', size = 12)
@@ -74,15 +74,15 @@ def gat_clearing_chart(clean, dirty):
     return fig
 
 
-def get_masking_chart(data, mask, borders):
+def get_masking_chart(data, mask, borders, point_size=2):
     x_left, x_right, y_bottom, y_top = borders
 
     fig, axs = plt.subplots(1, 2, layout='tight', figsize=[12,7])
     sns.scatterplot(data=data[mask], x='x', y='y', 
-                    alpha=0.8, s=2, c='xkcd:teal',
+                    alpha=0.8, s=point_size, c='xkcd:teal',
                     ax=axs[0])
     sns.scatterplot(data=data[~mask], x='x', y='y', 
-                    alpha=0.4, s=2, c='gray',
+                    alpha=0.4, s=point_size, c='gray',
                     ax=axs[0])
     axs[0].plot([x_left, x_left, x_right, x_right, x_left], [y_bottom, y_top, y_top, y_bottom, y_bottom], 
                 alpha=1.0, lw=1, c='black')
@@ -92,10 +92,10 @@ def get_masking_chart(data, mask, borders):
     axs[0].set_title('Instrument field')
 
     sns.scatterplot(data=data[mask], x='color_vi', y='mag_i', 
-                    alpha=0.8, s=2, c='xkcd:teal',
+                    alpha=0.8, s=point_size, c='xkcd:teal',
                     ax=axs[1])
     sns.scatterplot(data=data[~mask], x='color_vi', y='mag_i', 
-                    alpha=0.4, s=2, c='red',
+                    alpha=0.4, s=point_size, c='red',
                     ax=axs[1])
     axs[1].set_xlabel('V-I $_{[mag]}$', size = 12)
     axs[1].set_ylabel('$m_I$ $_{[mag]}$', size = 12)
@@ -109,7 +109,7 @@ def get_masking_chart(data, mask, borders):
     return fig
 
 
-def get_abs_mag_chart(data, dist, redshift, absorbtion, add_kde):
+def get_abs_mag_chart(data, dist, redshift, absorbtion, add_kde, point_size=2):
     fig, ax = plt.subplots(layout='tight', figsize=[9,8])
     
     data['color_vi_real'] = data['color_vi'] - redshift
@@ -117,12 +117,12 @@ def get_abs_mag_chart(data, dist, redshift, absorbtion, add_kde):
 
     if add_kde:
         ax = sns.scatterplot(data=data, x='color_vi_real', y='mag_i_real', 
-                             alpha=0.8, s=2)
+                             alpha=0.8, s=point_size)
         ax = sns.kdeplot(data=data, x='color_vi_real', y='mag_i_real', 
                          alpha=1.0, fill=False, cmap='plasma_r')
     else:
         ax = sns.scatterplot(data=data, x='color_vi_real', y='mag_i_real', 
-                             alpha=0.9, color='xkcd:blue grey', s=2)
+                             alpha=0.9, color='xkcd:blue grey', s=point_size)
         ax = sns.histplot(data=data, x='color_vi_real', y='mag_i_real', 
                           alpha=0.4, cmap='cubehelix_r', cbar=True)
 

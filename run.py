@@ -2,7 +2,7 @@ import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
+from fpdf import FPDF
 import json
 
 from PyQt5.QtWidgets import (
@@ -13,17 +13,29 @@ from src.main_window_ui import Ui_MainWindow
 from src.clearing_ui import Ui_Clearing_Dialog
 from src.masking_ui import Ui_Masking_Dialog
 
-from src.infra import read_file, check_available_columns 
+from src.infra import (
+    read_file, 
+    check_available_columns, 
+    create_pdf_out_of_figures
+)
 from src.simple_charts import (   
-    get_overview_chart, gat_clearing_chart, 
-    get_masking_chart, get_abs_mag_chart
+    get_overview_chart, 
+    gat_clearing_chart, 
+    get_masking_chart, 
+    get_abs_mag_chart
 )
 from src.branch_approximation import (
-    branch_two_step_analythis_support_functions, calculate_branch_double_chart
+    branch_two_step_analythis_support_functions, 
+    calculate_branch_double_chart
 )
-from src.denisty_approximation import get_density_chart, density_choosing_region
+from src.denisty_approximation import (
+    get_density_chart, 
+    density_choosing_region
+)
 from src.monte_carlo import (
-    plot_histogrm_3x3, iterate_over_n_experiments, plot_monte_carlo_results
+    plot_histogrm_3x3, 
+    iterate_over_n_experiments, 
+    plot_monte_carlo_results
 )
 
 
@@ -65,7 +77,7 @@ class MainWindow(QMainWindow):
 
         # third page
         self.ui.button_view_density.clicked.connect(self.view_density)
-        self.ui.button_save_2.clicked.connect(self.save_2) 
+        self.ui.button_save_2.clicked.connect(self.save_density_approach) 
 
     def open_file(self):
         widget = QWidget(parent=self)
@@ -73,15 +85,11 @@ class MainWindow(QMainWindow):
         if self.file_path:
             try:
                 self.data = read_file(self.file_path)
+                self.data_raw = self.data.copy()
                 self.ui.label_filename.setText(self.file_path)
                 self.ui.button_view_chosen.setEnabled(True)
                 self.ui.group_clearing.setEnabled(True)
 
-                self.fig_raw = get_overview_chart(self.data)
-                self.fig_raw.suptitle('Raw data')
-
-
-                plt.close('all') # should prevent opening of a lot plt-windows when a new file is chosen
                 self.ui.button_view_clearing.setEnabled(False)
                 self.ui.group_masking.setEnabled(False)
                 self.ui.button_view_masking.setEnabled(False)
@@ -89,6 +97,8 @@ class MainWindow(QMainWindow):
                 self.ui.group_reddening.setEnabled(False)
                 self.ui.button_final_view.setEnabled(False)
                 self.ui.check_add_kde_1.setEnabled(False)
+                
+                plt.close('all')
 
             except pd.errors.ParserError:
                 msg = QMessageBox()
@@ -99,13 +109,11 @@ class MainWindow(QMainWindow):
                 msg.exec_()
 
     def first_preview(self):
-        self.fig_raw.show()
+        fig_raw = get_overview_chart(self.data)
+        fig_raw.suptitle('Raw data')
+        fig_raw.show()
 
-    def view_clearing_result(self):
-        self.fig_clear.show()
-
-    def view_masking_result(self):
-        self.fig_mask.show()
+    ##########################################################################
 
     def open_clearing_dialog(self):
         window = QDialog(parent=self)
@@ -168,6 +176,11 @@ class MainWindow(QMainWindow):
         # window.ui.buttonBox.rejected.connect()
         window.show()
 
+    def view_clearing_result(self):
+        self.fig_clear.show()
+
+    ##########################################################################
+
     def open_masking_dialog(self):
         window = QDialog(parent=self)
         window.ui = Ui_Masking_Dialog()
@@ -220,6 +233,11 @@ class MainWindow(QMainWindow):
         window.ui.buttonBox.accepted.connect(saving)
         # window.ui.buttonBox.rejected.connect()
         window.show()
+
+    def view_masking_result(self):
+        self.fig_mask.show()
+
+    ##########################################################################
 
     def mpcs_changed(self, value):
         if (value > 0):
@@ -310,11 +328,15 @@ class MainWindow(QMainWindow):
             msg.exec_()
 
     def save_branch_approx(self):
-        fig_new_overview = get_overview_chart(self.data)
+        fig_raw_overview = get_overview_chart(self.data_raw, point_size=2)
+        fig_raw_overview.suptitle('Raw data')
+
+        fig_new_overview = get_overview_chart(self.data, point_size=2)
         fig_new_overview.suptitle('Cleaned data')
 
-        add_kde = self.ui.check_add_kde_1.checkState() == 2
-        fig_absmag = get_abs_mag_chart(self.data, self.dist, self.redshift, self.absorbtion, add_kde)
+        fig_absmag = get_abs_mag_chart(
+            self.data, self.dist, self.redshift, self.absorbtion, add_kde=False, point_size=2
+        )
 
         params = self.pack_all_branch_approx_parameters_in_dict()
         chosen_bool, inliers_bool, f_approx, f_std = branch_two_step_analythis_support_functions(self.data, params)
@@ -348,20 +370,20 @@ class MainWindow(QMainWindow):
                 'i_top': params['i_left'], 
                 'i_bottom': params['i_right'], 
                 'p_chosen': params['p_chosen'],
-                }
+            }
         }
 
         filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON', 'output')
         with open(filename, "w") as out_file:
             json.dump(data, out_file, indent=4)
 
-        figures = [self.fig_raw, fig_new_overview, fig_absmag, fig_result]
+        figures = [fig_raw_overview, fig_new_overview, fig_absmag, fig_result]
         filename, _ = QFileDialog.getSaveFileName(self, 'Save PDF', 'output')
-        pp = PdfPages(filename)
+
+        pdf = create_pdf_out_of_figures(figures)
+        pdf.output(filename)
         for fig in figures:
-            pp.savefig(fig)
-        pp.close()
-        # plt.close('all')
+            plt.close(fig)
 
     ##########################################################################
 
@@ -398,18 +420,66 @@ class MainWindow(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
 
-    def save_2(self):
+    def save_density_approach(self):
+        self.ui.button_save_2.setText('WAIT')
+
+        fig_raw_overview = get_overview_chart(self.data_raw, point_size=2)
+        fig_raw_overview.suptitle('Raw data')
+
+        fig_new_overview = get_overview_chart(self.data, point_size=2)
+        fig_new_overview.suptitle('Cleaned data')
+
+        fig_absmag = get_abs_mag_chart(self.data, self.dist, self.redshift, self.absorbtion, add_kde=False, point_size=2)
+    
         params = self.pack_all_density_parameters_in_dict()
-        # fig1 = plot_histogrm_3x3(self.data, params)
-        # fig1.show()
-        n = 1000
-        results = iterate_over_n_experiments(self.data, params, n)
+        fig_zoom_density = get_density_chart(self.data, params)
+
+        number_of_mc_experiments = 1000
+        results = iterate_over_n_experiments(self.data, params, number_of_mc_experiments)
+        
         color_mean = results.mean()
         color_error = ((results - color_mean)**2).mean()**0.5
 
-        fig2 = plot_monte_carlo_results(results, color_mean, color_error, n)
-        fig2.show()
+        fig_mc_visualsation = plot_histogrm_3x3(self.data, params)
 
+        fig_result = plot_monte_carlo_results(results, color_mean, color_error, number_of_mc_experiments)
+
+        data = {
+            'method' : 'finding the maximum density',
+            'filename' : self.file_path,
+            'I mag level' : params['i_level'],
+            '(V-I) color estimate' : color_mean,
+            '(V-I) color estimate std' : color_error,
+            'distance [in mag]' : params['dist'],
+            'distance low' : params['dist'] - params['d_minus'],
+            'distance high' : params['dist'] + params['d_plus'],
+            'distance [in mpcs]' : self.dist_in_mpcs,
+            'absorbtion (I)' : params['absorbtion'],
+            'redshift (V-I)' : params['redshift'],
+            'paramters' : {
+                'number of m-c experiments' : number_of_mc_experiments,
+                'vi_left' : params['vi_left'],
+                'vi_right' : params['vi_right'],
+                'i_level_low' : params['i_level_low'],
+                'i_level_high' : params['i_level_high'],
+                's_scaler' : params['s_scaler'],
+                'mean_i_error' : params['mean_i_error'],
+            }
+        }
+
+        filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON', 'output')
+        with open(filename, "w") as out_file:
+            json.dump(data, out_file, indent=4)
+
+        figures = [fig_raw_overview, fig_new_overview, fig_absmag, 
+                   fig_zoom_density, fig_mc_visualsation, fig_result]
+        filename, _ = QFileDialog.getSaveFileName(self, 'Save PDF', 'output')
+        
+        pdf = create_pdf_out_of_figures(figures)
+        pdf.output(filename)
+        for fig in figures:
+            plt.close(fig)
+        self.ui.button_save_2.setText('Calculate and save [json + pdf] - [⏱]')
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
