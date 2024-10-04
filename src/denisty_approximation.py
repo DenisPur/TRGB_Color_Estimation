@@ -29,7 +29,7 @@ def density_choosing_region(data, params):
     return chosen_bool, i_level_low, i_level_high, mean_i_error, mean_color_error
 
 
-def get_density_chart(data, params):
+def get_density_chart(data, params, smoothing_bw):
     fig, axs = plt.subplots(2, 1, sharex=True, layout='tight', figsize=[8,8])
 
     i_level_low = params['i_level_low']
@@ -79,15 +79,15 @@ def get_density_chart(data, params):
                  alpha=0.5, 
                  ax=axs[1])
 
-    x_points_num = 200
+    x_points_num = 300
     x_linspace = np.linspace(start=params['vi_left'], stop=params['vi_right'], num=x_points_num)
-    bw_by_error = 2 * params['mean_color_error'] / (params['vi_right'] - params['vi_left'])
+    bw_by_error = 2 * (params['mean_color_error'] + smoothing_bw) / (params['vi_right'] - params['vi_left'])
     kde_estimator = gaussian_kde(chosen['color_vi_real'].values, bw_method=bw_by_error)
     y_kde = kde_estimator.evaluate(x_linspace)
     x_max_y_value = np.argmax(y_kde) / (x_points_num - 1) * (params['vi_right'] - params['vi_left']) + params['vi_left']
 
     axs[1].plot(x_linspace, y_kde, color='xkcd:red', ls='-', lw=1, alpha=0.9)
-    axs[1].axvline(x_max_y_value, color='xkcd:dark red', ls='-.', lw=1, label=f'kde (bw=2$\sigma$) : {x_max_y_value:1.3f}')
+    axs[1].axvline(x_max_y_value, color='xkcd:dark red', ls='-.', lw=1, label=f'kde (bw=2$\sigma+\epsilon$) : {x_max_y_value:1.3f}')
 
     mean = chosen['color_vi_real'].mean()
     median = chosen['color_vi_real'].median()

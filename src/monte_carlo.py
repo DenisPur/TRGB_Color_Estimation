@@ -44,7 +44,7 @@ def ax_add_histogram(ax, colors, params, std_err):
     ax.text(x_max, max(y)+0.05, f'{x_max:1.4}', fontsize=12)
 
 
-def plot_histogrm_3x3(data, params):
+def plot_histogrm_3x3(data, params, smoothing_bw):
     fig, axes = plt.subplots(3, 3, sharex=True, sharey=True, figsize=[8,8])
 
     data_s = data[['mag_v', 'mag_i', 'err_v', 'err_i']].copy()
@@ -55,18 +55,18 @@ def plot_histogrm_3x3(data, params):
         for ax in row:
             data_stirred = randomly_stir_data(data_s)
             colors = crop_data(data_stirred, params)
-            ax_add_histogram(ax, colors, params, params['mean_color_error'])
+            ax_add_histogram(ax, colors, params, params['mean_color_error'] + smoothing_bw)
     fig.set_layout_engine('tight')
     return fig
 
 
-def iterate_over_n_experiments(data, params, n):
+def iterate_over_n_experiments(data, params, n, smoothing_bw):
     data_s = data[['mag_v', 'mag_i', 'err_v', 'err_i']].copy()
     data_s['color'] = data_s['mag_v'] - data_s['mag_i'] - params['redshift']
     data_s['mag'] = data_s['mag_i'] - params['dist'] - params['absorbtion']
     
     x_linspace = np.linspace(params['vi_left'], params['vi_right'], num=300)
-    bw = 2 * params['mean_color_error'] / (params['vi_right'] - params['vi_left'])
+    bw = 2 * (params['mean_color_error'] + smoothing_bw) / (params['vi_right'] - params['vi_left'])
     
     results = list()
     iter_num = 0

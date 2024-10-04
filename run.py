@@ -413,7 +413,7 @@ class MainWindow(QMainWindow):
     def view_density(self):
         params = self.pack_all_density_parameters_in_dict()
         try:
-            fig = get_density_chart(self.data, params)
+            fig = get_density_chart(self.data, params, smoothing_bw=0.1)
             fig.show()
         except ValueError:
             msg = QMessageBox()
@@ -440,11 +440,13 @@ class MainWindow(QMainWindow):
 
     def save_results(self, pdf, data):
         filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON', 'output')
-        with open(filename, "w") as out_file:
-            json.dump(data, out_file, indent=4)
+        if filename != '':
+            with open(filename, "w") as out_file:
+                json.dump(data, out_file, indent=4)
 
         filename, _ = QFileDialog.getSaveFileName(self, 'Save PDF', 'output')
-        pdf.output(filename)
+        if filename != '':
+            pdf.output(filename)
 
     def calculate_density_approach(self):
         params = self.pack_all_density_parameters_in_dict()
@@ -459,15 +461,19 @@ class MainWindow(QMainWindow):
             self.data, params['dist'], params['redshift'], params['absorbtion'], 
             add_kde=False, point_size=2)
     
-        fig_zoom_density = get_density_chart(self.data, params)
-
         number_of_mc_experiments = 1000
-        results = iterate_over_n_experiments(self.data, params, number_of_mc_experiments)
+        smoothing_bw = 0.1
+
+        fig_zoom_density = get_density_chart(self.data, params, smoothing_bw)
+        results = iterate_over_n_experiments(
+            self.data, params, 
+            number_of_mc_experiments, smoothing_bw
+        )
         
         color_mean = results.mean()
         color_error = ((results - color_mean)**2).mean()**0.5
 
-        fig_mc_visualsation = plot_histogrm_3x3(self.data, params)
+        fig_mc_visualsation = plot_histogrm_3x3(self.data, params, smoothing_bw)
 
         fig_result = plot_monte_carlo_results(results, color_mean, color_error, number_of_mc_experiments)
 
@@ -485,6 +491,7 @@ class MainWindow(QMainWindow):
             'redshift (V-I)' : params['redshift'],
             'paramters' : {
                 'number of m-c experiments' : number_of_mc_experiments,
+                'espilon to smooth bw' : smoothing_bw,
                 'vi_left' : params['vi_left'],
                 'vi_right' : params['vi_right'],
                 'i_level_low' : params['i_level_low'],
