@@ -1,0 +1,23 @@
+{
+    "method": "finding the maximum density",
+    "filename": "/home/denis/EDD/SAO_TRGB_Color_Estimate/input_examples/NGC3738.csv",
+    "I mag level": -3.5,
+    "(V-I) color estimate": 1.3184350766290565,
+    "(V-I) color estimate std": 0.015297668453956522,
+    "distance [in mag]": 28.625,
+    "distance low": 28.605,
+    "distance high": 28.645,
+    "distance [in mpcs]": 5.31,
+    "absorbtion (I)": 0.013544999999999998,
+    "redshift (V-I)": 0.024678,
+    "paramters": {
+        "number of m-c experiments": 1000,
+        "espilon to smooth bw": 0.1,
+        "vi_left": 0.09999999999999998,
+        "vi_right": 2.3,
+        "i_level_low": -3.592446455279689,
+        "i_level_high": -3.407553544720311,
+        "s_scaler": 1.0,
+        "mean_i_error": 0.07244645527968889
+    }
+}

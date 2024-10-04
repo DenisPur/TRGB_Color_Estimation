@@ -9,5 +9,5 @@ ui_files/*
 test.py
 
 # results
-*.pdf
-*.json
+# *.pdf
+# *.json

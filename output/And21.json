@@ -1,0 +1,21 @@
+{
+    "method": "approximation of a branch by a parabola",
+    "filename": "/home/denis/EDD/SAO_TRGB_Color_Estimate/input_examples/And21.csv",
+    "I mag level": -3.5,
+    "(V-I) color estimate": 1.1898855983785341,
+    "(V-I) color estimate low": 1.2188776335141307,
+    "(V-I) color estimate high": 1.162205490341229,
+    "distance [in mag]": 24.569,
+    "distance low": 24.448999999999998,
+    "distance high": 24.689,
+    "distance [in mpcs]": 0.82,
+    "absorbtion (I)": 0.12340999999999999,
+    "redshift (V-I)": 0.22484400000000002,
+    "paramters": {
+        "vi_left": 0.7,
+        "vi_right": 1.7,
+        "i_top": -4.2,
+        "i_bottom": -2.0,
+        "p_chosen": 95.0
+    }
+}
