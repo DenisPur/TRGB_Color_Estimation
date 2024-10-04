@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 from fpdf import FPDF
 import json
 
+from PyQt5.QtCore import (
+    QThread, pyqtSignal
+)
 from PyQt5.QtWidgets import (
     QMainWindow, QApplication, QWidget, QDialog, QFileDialog, QMessageBox
 )
@@ -77,7 +80,7 @@ class MainWindow(QMainWindow):
 
         # third page
         self.ui.button_view_density.clicked.connect(self.view_density)
-        self.ui.button_save_2.clicked.connect(self.save_density_approach) 
+        self.ui.button_save_2.clicked.connect(self.calculate_and_save_density_manager) 
 
     def open_file(self):
         widget = QWidget(parent=self)
@@ -420,8 +423,31 @@ class MainWindow(QMainWindow):
             msg.setWindowTitle("Error")
             msg.exec_()
 
-    def save_density_approach(self):
-        self.ui.button_save_2.setText('WAIT')
+    def calculate_and_save_density_manager(self):
+        self.thread = CalculateAndSaveDensity(self)
+        self.thread.started.connect(self.show_processing)
+        self.thread.finished.connect(self.show_done)
+        self.thread.result_signal.connect(self.save_results)
+        self.thread.start()
+
+    def show_processing(self):
+        self.ui.button_save_2.setText("Processing ⏱")
+        self.ui.button_save_2.setEnabled(False)
+
+    def show_done(self):
+        self.ui.button_save_2.setText('Calculate and save (json + pdf) [may take some time ⏱]')
+        self.ui.button_save_2.setEnabled(True)
+
+    def save_results(self, pdf, data):
+        filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON', 'output')
+        with open(filename, "w") as out_file:
+            json.dump(data, out_file, indent=4)
+
+        filename, _ = QFileDialog.getSaveFileName(self, 'Save PDF', 'output')
+        pdf.output(filename)
+
+    def calculate_density_approach(self):
+        params = self.pack_all_density_parameters_in_dict()
 
         fig_raw_overview = get_overview_chart(self.data_raw, point_size=2)
         fig_raw_overview.suptitle('Raw data')
@@ -429,9 +455,10 @@ class MainWindow(QMainWindow):
         fig_new_overview = get_overview_chart(self.data, point_size=2)
         fig_new_overview.suptitle('Cleaned data')
 
-        fig_absmag = get_abs_mag_chart(self.data, self.dist, self.redshift, self.absorbtion, add_kde=False, point_size=2)
+        fig_absmag = get_abs_mag_chart(
+            self.data, params['dist'], params['redshift'], params['absorbtion'], 
+            add_kde=False, point_size=2)
     
-        params = self.pack_all_density_parameters_in_dict()
         fig_zoom_density = get_density_chart(self.data, params)
 
         number_of_mc_experiments = 1000
@@ -467,19 +494,26 @@ class MainWindow(QMainWindow):
             }
         }
 
-        filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON', 'output')
-        with open(filename, "w") as out_file:
-            json.dump(data, out_file, indent=4)
-
         figures = [fig_raw_overview, fig_new_overview, fig_absmag, 
                    fig_zoom_density, fig_mc_visualsation, fig_result]
-        filename, _ = QFileDialog.getSaveFileName(self, 'Save PDF', 'output')
-        
         pdf = create_pdf_out_of_figures(figures)
-        pdf.output(filename)
         for fig in figures:
             plt.close(fig)
-        self.ui.button_save_2.setText('Calculate and save [json + pdf] - [⏱]')
+
+        return pdf, data
+
+
+class CalculateAndSaveDensity(QThread):
+    result_signal = pyqtSignal(FPDF, dict)
+
+    def __init__(self, parent):
+        super(CalculateAndSaveDensity, self).__init__()
+        self.window = parent
+        
+    def run(self):
+        pdf, data = self.window.calculate_density_approach()
+        self.result_signal.emit(pdf, data)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

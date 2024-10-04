@@ -121,13 +121,3 @@ class Ui_Masking_Dialog(object):
         self.label_y.setText(_translate("Dialog", "<html><head/><body><p align=\"center\">≤ y ≤ </p></body></html>"))
         self.label_y_max.setText(_translate("Dialog", "<html><head/><body><p align=\"center\">max</p></body></html>"))
         self.button_preview.setText(_translate("Dialog", "Preview"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    Dialog = QtWidgets.QDialog()
-    ui = Ui_Masking_Dialog()
-    ui.setupUi(Dialog)
-    Dialog.show()
-    sys.exit(app.exec_())

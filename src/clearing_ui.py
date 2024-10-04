@@ -160,13 +160,3 @@ class Ui_Clearing_Dialog(object):
         self.label_snr.setText(_translate("Dialog", "<html><head/><body><p align=\"right\">s/n ratio ≥ </p></body></html>"))
         self.label_sharp.setText(_translate("Dialog", "<html><head/><body><p align=\"right\">( sharp <span style=\" vertical-align:sub;\">V</span> + sharp <span style=\" vertical-align:sub;\">I </span>)<span style=\" vertical-align:super;\">2</span> ≤ </p></body></html>"))
         self.button_preview.setText(_translate("Dialog", "Preview"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    Dialog = QtWidgets.QDialog()
-    ui = Ui_Clearing_Dialog()
-    ui.setupUi(Dialog)
-    Dialog.show()
-    sys.exit(app.exec_())

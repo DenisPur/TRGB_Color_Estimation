@@ -615,7 +615,7 @@ class Ui_MainWindow(object):
         self.label_3.setText(_translate("MainWindow", "<html><head/><body><p align=\"right\">redshift (V-I) = </p></body></html>"))
         self.label_4.setText(_translate("MainWindow", "<html><head/><body><p align=\"right\">absorbtion (I) =</p></body></html>"))
         self.button_final_view.setText(_translate("MainWindow", "View in absolute magnitudes"))
-        self.check_add_kde_1.setText(_translate("MainWindow", "Use kde on chart [may require some time ⏱]"))
+        self.check_add_kde_1.setText(_translate("MainWindow", "Use kde on chart [may take some time ⏱]"))
         self.main_tabs.setTabText(self.main_tabs.indexOf(self.tab_1), _translate("MainWindow", "Entering galaxy values"))
 
         self.group_spatial.setTitle(_translate("MainWindow", "Branch area selection"))
@@ -669,6 +669,6 @@ class Ui_MainWindow(object):
         self.label_2.setText(_translate("MainWindow", "<html><head/><body><p> S = </p></body></html>"))
         self.button_view_density.setText(_translate("MainWindow", "Preview"))
         self.groupBox.setTitle(_translate("MainWindow", "Saving results"))
-        self.button_save_2.setText(_translate("MainWindow", "Calculate and save [json + pdf] - [⏱]"))
+        self.button_save_2.setText(_translate("MainWindow", "Calculate and save (json + pdf) [may take some time ⏱]"))
  
         self.main_tabs.setTabText(self.main_tabs.indexOf(self.tab_3), _translate("MainWindow", "Density analysis method"))

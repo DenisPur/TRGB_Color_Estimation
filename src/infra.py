@@ -42,7 +42,6 @@ def create_pdf_out_of_figures(fig_list):
         height_mm = height * k
         pdf.add_page(orientation='P', format=(width_mm, height_mm))
 
-    
         pdf.image(buf, x=1, y=1, w=width_mm * 0.99)  # Adjust positioning and size as needed
     
         buf.close()
