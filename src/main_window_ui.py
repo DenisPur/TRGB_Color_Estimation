@@ -629,7 +629,7 @@ class Ui_MainWindow(object):
         self.label_d_plus.setText(_translate("MainWindow", "<html><head/><body><p> δ<span style=\" vertical-align:sub;\">+</span> D<span style=\" vertical-align:super;\">m</span> = </p></body></html>"))
         self.label_d_minus.setText(_translate("MainWindow", "<html><head/><body><p> δ<span style=\" vertical-align:sub;\">-</span> D<span style=\" vertical-align:super;\">m</span> = </p></body></html>"))
         self.group_saving.setTitle(_translate("MainWindow", "Saving results"))
-        self.button_save_1.setText(_translate("MainWindow", "Save [json + pdf]"))
+        self.button_save_1.setText(_translate("MainWindow", "Save (json + pdf)"))
  
         self.group_level.setTitle(_translate("MainWindow", "Level (I), where the color is measured")) 
         self.label_level.setText(_translate("MainWindow", "<html><head/><body><p> M<span style=\" vertical-align:sub;\">I</span> = </p></body></html>"))

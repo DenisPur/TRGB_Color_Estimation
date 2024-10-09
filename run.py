@@ -72,7 +72,7 @@ class MainWindow(QMainWindow):
         self.ui.buttons_reddening.accepted.connect(self.write_reddening)
         self.ui.buttons_reddening.rejected.connect(self.empty_reddening)
 
-        self.ui.button_final_view.clicked.connect(self.view_page1_final)
+        self.ui.button_final_view.clicked.connect(self.view_chart_manager)
 
         # second page
         self.ui.button_view_spatial.clicked.connect(self.view_branch)
@@ -293,11 +293,27 @@ class MainWindow(QMainWindow):
         self.ui.label_redshift.setText(f'{redshift:1.4}')
         self.ui.label_absorbtion.setText(f'{absorbtion:1.4}')
     
-    def view_page1_final(self):
+    def view_chart_manager(self):
+        self.thread = ViewChart(self)
+        self.thread.started.connect(self.show_final_chart_processing)
+        self.thread.finished.connect(self.show_final_chart_done)
+        self.thread.start()
+    
+    def view_final_chart(self):
         add_kde = self.ui.check_add_kde_1.checkState() == 2
         fig = get_abs_mag_chart(self.data, self.dist, self.redshift, self.absorbtion, add_kde)
         fig.show()
-    
+
+    def show_final_chart_processing(self):
+        self.ui.button_final_view.setText("Processing ⏱")
+        self.ui.check_add_kde_1.setEnabled(False)
+        self.ui.button_final_view.setEnabled(False)
+
+    def show_final_chart_done(self):
+        self.ui.button_final_view.setText('View in absolute magnitudes')
+        self.ui.check_add_kde_1.setEnabled(True)
+        self.ui.button_final_view.setEnabled(True)
+
     ##########################################################################
     
     def pack_all_branch_approx_parameters_in_dict(self):
@@ -425,20 +441,20 @@ class MainWindow(QMainWindow):
 
     def calculate_and_save_density_manager(self):
         self.thread = CalculateAndSaveDensity(self)
-        self.thread.started.connect(self.show_processing)
-        self.thread.finished.connect(self.show_done)
-        self.thread.result_signal.connect(self.save_results)
+        self.thread.started.connect(self.show_density_processing)
+        self.thread.finished.connect(self.show_density_done)
+        self.thread.result_signal.connect(self.save_density_results)
         self.thread.start()
 
-    def show_processing(self):
+    def show_density_processing(self):
         self.ui.button_save_2.setText("Processing ⏱")
         self.ui.button_save_2.setEnabled(False)
 
-    def show_done(self):
+    def show_density_done(self):
         self.ui.button_save_2.setText('Calculate and save (json + pdf) [may take some time ⏱]')
         self.ui.button_save_2.setEnabled(True)
 
-    def save_results(self, pdf, data):
+    def save_density_results(self, pdf, data):
         filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON', 'output')
         if filename != '':
             with open(filename, "w") as out_file:
@@ -462,7 +478,7 @@ class MainWindow(QMainWindow):
             add_kde=False, point_size=2)
     
         number_of_mc_experiments = 1000
-        smoothing_bw = 0.1
+        smoothing_bw = 0.05
 
         fig_zoom_density = get_density_chart(self.data, params, smoothing_bw)
         results = iterate_over_n_experiments(
@@ -520,6 +536,15 @@ class CalculateAndSaveDensity(QThread):
     def run(self):
         pdf, data = self.window.calculate_density_approach()
         self.result_signal.emit(pdf, data)
+
+
+class ViewChart(QThread):
+    def __init__(self, parent):
+        super(ViewChart, self).__init__()
+        self.window = parent
+        
+    def run(self):
+        self.window.view_final_chart()
 
 
 if __name__ == "__main__":

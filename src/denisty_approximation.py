@@ -79,7 +79,7 @@ def get_density_chart(data, params, smoothing_bw):
                  alpha=0.5, 
                  ax=axs[1])
 
-    x_points_num = 300
+    x_points_num = int((params['vi_right'] - params['vi_left']) * 200)
     x_linspace = np.linspace(start=params['vi_left'], stop=params['vi_right'], num=x_points_num)
     bw_by_error = 2 * (params['mean_color_error'] + smoothing_bw) / (params['vi_right'] - params['vi_left'])
     kde_estimator = gaussian_kde(chosen['color_vi_real'].values, bw_method=bw_by_error)
