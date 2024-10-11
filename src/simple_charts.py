@@ -2,7 +2,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
+from matplotlib import ticker
 import seaborn as sns
+from scipy.stats import gaussian_kde
 
 
 def get_overview_chart(data, point_size=2):
@@ -109,17 +111,39 @@ def get_masking_chart(data, mask, borders, point_size=2):
     return fig
 
 
-def get_abs_mag_chart(data, dist, redshift, absorbtion, add_kde, point_size=2):
+def get_kde(data, dist, redshift, absorbtion):
+    x = data['color_vi'].to_numpy() - redshift
+    y = data['mag_i'].to_numpy() - dist - absorbtion
+
+    x_grid = np.linspace(min(x), max(x), num=100)
+    y_grid = np.linspace(min(y), max(y), num=200)
+
+    xy = np.vstack([x, y])
+    kde = gaussian_kde(xy, bw_method=0.1)
+    
+    x_grid, y_grid = np.meshgrid(x_grid, y_grid)
+    z_grid = kde(np.vstack([x_grid.ravel(), y_grid.ravel()])).reshape(x_grid.shape) * len(x)
+
+    return (x_grid, y_grid, z_grid)
+
+
+def get_abs_mag_chart(data, dist, redshift, absorbtion, kde=None, point_size=2):
     fig, ax = plt.subplots(layout='tight', figsize=[9,8])
     
     data['color_vi_real'] = data['color_vi'] - redshift
     data['mag_i_real'] = data['mag_i'] - dist - absorbtion
 
-    if add_kde:
+    if kde:
+        x_grid, y_grid, z_grid = kde
+        z_max = np.max(z_grid)
+        levels = [100 * 2**i for i in range(int(np.log(z_max / 100)/np.log(2)) + 1)]
+
         ax = sns.scatterplot(data=data, x='color_vi_real', y='mag_i_real', 
                              alpha=0.8, s=point_size)
-        ax = sns.kdeplot(data=data, x='color_vi_real', y='mag_i_real', 
-                         alpha=1.0, fill=False, cmap='plasma_r')
+        contour = plt.contour(x_grid, y_grid, z_grid, 
+                              cmap="plasma_r", alpha=0.8, 
+                              levels=levels,
+                              norm='log')
     else:
         ax = sns.scatterplot(data=data, x='color_vi_real', y='mag_i_real', 
                              alpha=0.9, color='xkcd:blue grey', s=point_size)

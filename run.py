@@ -21,11 +21,12 @@ from src.infra import (
     check_available_columns, 
     create_pdf_out_of_figures
 )
-from src.simple_charts import (   
+from src.simple_charts import ( 
     get_overview_chart, 
     gat_clearing_chart, 
     get_masking_chart, 
-    get_abs_mag_chart
+    get_abs_mag_chart,
+    get_kde
 )
 from src.branch_approximation import (
     branch_two_step_analythis_support_functions, 
@@ -81,6 +82,8 @@ class MainWindow(QMainWindow):
         # third page
         self.ui.button_view_density.clicked.connect(self.view_density)
         self.ui.button_save_2.clicked.connect(self.calculate_and_save_density_manager) 
+
+    ##########################################################################
 
     def open_file(self):
         widget = QWidget(parent=self)
@@ -266,6 +269,8 @@ class MainWindow(QMainWindow):
         self.ui.enter_mags.setValue(0)
         self.ui.enter_mpcs.setValue(0)
 
+    ##########################################################################
+
     def write_reddening(self):
         if (self.ui.tabs_reddening.currentIndex() == 0):
             self.redshift = self.ui.enter_b_minus_v.value() * self.ui.enter_coef_1.value()
@@ -293,16 +298,22 @@ class MainWindow(QMainWindow):
         self.ui.label_redshift.setText(f'{redshift:1.4}')
         self.ui.label_absorbtion.setText(f'{absorbtion:1.4}')
     
-    def view_chart_manager(self):
-        self.thread = ViewChart(self)
-        self.thread.started.connect(self.show_final_chart_processing)
-        self.thread.finished.connect(self.show_final_chart_done)
-        self.thread.start()
+    ##########################################################################
     
-    def view_final_chart(self):
+    def view_chart_manager(self):
         add_kde = self.ui.check_add_kde_1.checkState() == 2
-        fig = get_abs_mag_chart(self.data, self.dist, self.redshift, self.absorbtion, add_kde)
-        fig.show()
+        if add_kde:
+            self.thread = CalculateKDE(self.data, self.dist, self.redshift, self.absorbtion)
+            self.thread.started.connect(self.show_final_chart_processing)
+            self.thread.finished.connect(self.show_final_chart_done)
+            self.thread.result_signal.connect(self.view_filnal_chart)
+            self.thread.start()
+        else: 
+            self.view_filnal_chart(kde=None)
+
+    def view_filnal_chart(self, kde):
+        fig = get_abs_mag_chart(self.data, self.dist, self.redshift, self.absorbtion, kde=kde)
+        fig.show()       
 
     def show_final_chart_processing(self):
         self.ui.button_final_view.setText("Processing ⏱")
@@ -538,13 +549,19 @@ class CalculateAndSaveDensity(QThread):
         self.result_signal.emit(pdf, data)
 
 
-class ViewChart(QThread):
-    def __init__(self, parent):
-        super(ViewChart, self).__init__()
-        self.window = parent
-        
+class CalculateKDE(QThread):
+    result_signal = pyqtSignal(tuple)
+
+    def __init__(self, data, dist, redshift, absorbtion):
+        super(CalculateKDE, self).__init__()
+        self.data = data
+        self.dist = dist 
+        self.redshift = redshift 
+        self.absorbtion = absorbtion        
+
     def run(self):
-        self.window.view_final_chart()
+        kde = get_kde(self.data, self.dist, self.redshift, self.absorbtion)
+        self.result_signal.emit(kde)
 
 
 if __name__ == "__main__":
