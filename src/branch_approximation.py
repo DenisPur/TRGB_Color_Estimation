@@ -55,7 +55,7 @@ def branch_two_step_analythis_support_functions(data, params):
 
 
 def calculate_branch_double_chart(data, params, chosen_bool, inliers_bool, f_approx, f_std):
-    fig, axs = plt.subplots(1, 2, layout='tight', figsize=[12,6])
+    fig, axs = plt.subplots(1, 2, layout='tight', figsize=[16,9])
        
     chosen = data[chosen_bool]
     non_chosen = data[~chosen_bool]

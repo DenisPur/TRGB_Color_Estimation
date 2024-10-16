@@ -45,7 +45,7 @@ def ax_add_histogram(ax, colors, params, std_err):
 
 
 def plot_histogrm_3x3(data, params, smoothing_bw):
-    fig, axes = plt.subplots(3, 3, sharex=True, sharey=True, figsize=[8,8])
+    fig, axes = plt.subplots(3, 3, sharex=True, sharey=True, figsize=[9,9])
 
     data_s = data[['mag_v', 'mag_i', 'err_v', 'err_i']].copy()
     data_s['color'] = data_s['mag_v'] - data_s['mag_i'] - params['redshift']
@@ -70,20 +70,23 @@ def iterate_over_n_experiments(data, params, n, smoothing_bw):
     bw = 2 * (params['mean_color_error'] + smoothing_bw) / (params['vi_right'] - params['vi_left'])
     
     results = list()
+    number_of_stars = list()
     iter_num = 0
 
     while(iter_num <= n):
         data_stirred = randomly_stir_data(data_s)
         colors = crop_data(data_stirred, params)
-        if len(data_stirred) == 0: 
+        if len(colors) == 0: 
             continue
         iter_num += 1
+        number_of_stars.append(len(colors))
 
         kde = gaussian_kde(colors, bw_method=bw)
         y = kde.evaluate(x_linspace)
         x_max = x_linspace[np.argmax(y)]
         results.append(x_max)
-    return np.array(results)
+    mean_number_of_stars = np.median(number_of_stars)
+    return np.array(results), mean_number_of_stars
 
 
 def plot_monte_carlo_results(experiments_results, mean_color, std_err, n):
@@ -92,7 +95,7 @@ def plot_monte_carlo_results(experiments_results, mean_color, std_err, n):
         y = 1 / (std * np.sqrt(2*np.pi)) * np.exp(- 0.5 * (t - mean)**2 / std**2)
         return y
 
-    fig, ax = plt.subplots(figsize=[8,8])
+    fig, ax = plt.subplots(figsize=[9,9])
 
     lb, rb = min(experiments_results), max(experiments_results)
     bins = int((rb - lb) * 200 + 1)

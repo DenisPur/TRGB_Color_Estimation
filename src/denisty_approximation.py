@@ -30,7 +30,7 @@ def density_choosing_region(data, params):
 
 
 def get_density_chart(data, params, smoothing_bw):
-    fig, axs = plt.subplots(2, 1, sharex=True, layout='tight', figsize=[8,8])
+    fig, axs = plt.subplots(2, 1, sharex=True, layout='tight', figsize=[9,9])
 
     i_level_low = params['i_level_low']
     i_level_high = params['i_level_high']
