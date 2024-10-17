@@ -103,6 +103,7 @@ class MainWindow(QMainWindow):
             try:
                 self.data = read_file(self.file_path)
                 self.data_raw = self.data.copy()
+                
                 self.ui.label_filename.setText(self.file_path)
                 self.ui.button_view_chosen.setEnabled(True)
                 self.ui.group_clearing.setEnabled(True)
@@ -187,7 +188,6 @@ class MainWindow(QMainWindow):
             self.ui.button_view_clearing.setEnabled(True)
             self.ui.group_masking.setEnabled(True)
             self.ui.group_distance.setEnabled(True)
-            self.mask_used = True
 
         window.ui.button_preview.clicked.connect(preview)
         window.ui.buttonBox.accepted.connect(saving)
@@ -246,6 +246,8 @@ class MainWindow(QMainWindow):
             self.data = self.data[masking]
             self.ui.button_view_masking.setEnabled(True)
             self.ui.group_distance.setEnabled(True)
+
+            self.mask_used = True
 
         window.ui.button_preview.clicked.connect(preview)
         window.ui.buttonBox.accepted.connect(saving)
@@ -537,7 +539,7 @@ class MainWindow(QMainWindow):
             'absorbtion (I)' : params['absorbtion'],
             'redshift (V-I)' : params['redshift'],
             'paramters' : {
-                'mean number of stars' : mean_number_of_stars,
+                'mean number of stars' : num_of_stars,
                 'number of m-c experiments' : number_of_mc_experiments,
                 'espilon to smooth bw' : smoothing_bw,
                 'vi_left' : params['vi_left'],
