@@ -217,3 +217,25 @@ def read_type9(file : str | Path) -> pd.DataFrame:
         'm_err' : 'err_v', 'm_err.1' : 'err_i'}
     data = pd.read_csv(file, header=1, delim_whitespace=True, index_col=False)
     return data.rename(columns=DICT)
+
+
+def read_type9(file : str | Path) -> pd.DataFrame:
+    data = pd.read_csv(file, header=None, delim_whitespace=True, index_col=False)
+    data = data.iloc[:, [0, 1, 2, 8, 
+                         12, 13, 15, 16, 17,
+                         22, 23, 25, 26, 27]]
+    data.columns = ['extension', 'x', 'y', 'type', 
+                    'mag_v', 'err_v', 'snr_v', 'sharp_v', 'round_v',
+                    'mag_i', 'err_i', 'snr_i', 'sharp_i', 'round_i']
+    return data
+
+
+def read_type10(file : str | Path) -> pd.DataFrame:
+    data = pd.read_csv(file, header=None, delim_whitespace=True, index_col=False)
+    data = data.iloc[:, [0, 2, 3, 10, 
+                         15, 17, 19, 20, 21, 22, 23, 
+                         28, 30, 32, 33, 34, 35, 36]]
+    data.columns = ['extension', 'x', 'y', 'type', 
+                    'mag_v', 'err_v', 'snr_v', 'sharp_v', 'round_v', 'crowd_v', 'flag_v',
+                    'mag_i', 'err_i', 'snr_i', 'sharp_i', 'round_i', 'crowd_i', 'flag_i']
+    return data
