@@ -7,7 +7,8 @@ import json
 
 from PyQt5.QtCore import (
     QThread, 
-    pyqtSignal
+    pyqtSignal,
+    QLocale
 )
 from PyQt5.QtWidgets import (
     QMainWindow, 
@@ -52,6 +53,8 @@ from src.monte_carlo import (
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
+
+        self.setLocale(QLocale("en_US"))
 
         # UI set up
         self.ui = Ui_MainWindow()
@@ -114,7 +117,7 @@ class MainWindow(QMainWindow):
                 self.ui.group_distance.setEnabled(False)
                 self.ui.group_reddening.setEnabled(False)
                 self.ui.button_final_view.setEnabled(False)
-                self.ui.check_add_kde_1.setEnabled(False)
+                self.ui.check_add_kde.setEnabled(False)
                 
                 plt.close('all')
 
@@ -293,7 +296,7 @@ class MainWindow(QMainWindow):
             self.redshift = self.ui.enter_redshift.value()
             self.absorbtion = self.ui.enter_absorbtion.value()
         self.ui.button_final_view.setEnabled(True)
-        self.ui.check_add_kde_1.setEnabled(True)
+        self.ui.check_add_kde.setEnabled(True)
         self.ui.main_tabs.setTabEnabled(1, True)
         self.ui.main_tabs.setTabEnabled(2, True)
 
@@ -315,7 +318,7 @@ class MainWindow(QMainWindow):
     ##########################################################################
     
     def view_chart_manager(self):
-        add_kde = self.ui.check_add_kde_1.checkState() == 2
+        add_kde = self.ui.check_add_kde.checkState() == 2
         if add_kde:
             self.thread = CalculateKDE(self.data, self.dist, self.redshift, self.absorbtion)
             self.thread.started.connect(self.show_final_chart_processing)
@@ -331,12 +334,12 @@ class MainWindow(QMainWindow):
 
     def show_final_chart_processing(self):
         self.ui.button_final_view.setText("Processing ⏱")
-        self.ui.check_add_kde_1.setEnabled(False)
+        self.ui.check_add_kde.setEnabled(False)
         self.ui.button_final_view.setEnabled(False)
 
     def show_final_chart_done(self):
         self.ui.button_final_view.setText('View in absolute magnitudes')
-        self.ui.check_add_kde_1.setEnabled(True)
+        self.ui.check_add_kde.setEnabled(True)
         self.ui.button_final_view.setEnabled(True)
 
     ##########################################################################
@@ -509,8 +512,8 @@ class MainWindow(QMainWindow):
             self.data, params['dist'], params['redshift'], params['absorbtion'], 
             kde=kde, point_size=2)
     
-        number_of_mc_experiments = 1000
-        smoothing_bw = 0.05
+        number_of_mc_experiments = self.ui.enter_n_exp.value()
+        smoothing_bw = self.ui.enter_eps.values()
 
         fig_zoom_density = get_density_chart(self.data, params, smoothing_bw)
         results, num_of_stars = iterate_over_n_experiments(
