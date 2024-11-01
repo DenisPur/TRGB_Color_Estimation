@@ -513,7 +513,7 @@ class MainWindow(QMainWindow):
             kde=kde, point_size=2)
     
         number_of_mc_experiments = self.ui.enter_n_exp.value()
-        smoothing_bw = self.ui.enter_eps.values()
+        smoothing_bw = self.ui.enter_eps.value()
 
         fig_zoom_density = get_density_chart(self.data, params, smoothing_bw)
         results, num_of_stars = iterate_over_n_experiments(
