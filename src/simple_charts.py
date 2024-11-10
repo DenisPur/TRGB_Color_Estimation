@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.colors import Normalize
-from matplotlib import ticker
 import seaborn as sns
+from matplotlib import ticker
+from matplotlib.colors import Normalize
 from scipy.stats import gaussian_kde
+from functools import lru_cache
 
 
 def get_overview_chart(data, point_size=2):
@@ -111,19 +112,51 @@ def get_masking_chart(data, mask, borders, point_size=2):
     return fig
 
 
+def get_cells_chart(data, number_of_cells, point_size=2):
+    fig, ax = plt.subplots(layout='tight', figsize=[10,9])
+    ax = sns.scatterplot(data=data, x='x', y='y', 
+                         alpha=0.9, color='xkcd:blue grey', s=point_size)
+    x_grid = np.linspace(start=data['x'].min(), stop=data['x'].max(), num=number_of_cells+1)
+    y_grid = np.linspace(start=data['y'].min(), stop=data['y'].max(), num=number_of_cells+1)
+    for x in x_grid:
+        ax.plot([x, x], [data['y'].min(), data['y'].max()],
+                color='black', alpha=0.9, ls=':', lw=1)
+    for y in y_grid:
+        ax.plot([data['x'].min(), data['x'].max()], [y, y],
+                color='black', alpha=0.9, ls=':', lw=1)
+    ax = sns.histplot(data=data, x='x', y='y', 
+                      bins=[x_grid, y_grid], 
+                      alpha=0.4, cmap='cubehelix_r', 
+                      stat='count', cbar=True)
+    return fig
+
+
+def get_masked_cells_chart():
+    pass
+
+
 def get_kde(data, dist, redshift, absorbtion):
-    x = data['color_vi'].to_numpy() - redshift
-    y = data['mag_i'].to_numpy() - dist - absorbtion
-
-    x_grid = np.linspace(min(x), max(x), num=100)
-    y_grid = np.linspace(min(y), max(y), num=200)
-
-    xy = np.vstack([x, y])
-    kde = gaussian_kde(xy, bw_method=0.1)
+    x_raw = data['color_vi'].to_numpy(dtype=np.float32)
+    y_raw = data['mag_i'].to_numpy(dtype=np.float32)
+    x_grid, y_grid, z_grid = get_kde_computation_part(tuple(x_raw), tuple(y_raw))
     
-    x_grid, y_grid = np.meshgrid(x_grid, y_grid)
-    z_grid = kde(np.vstack([x_grid.ravel(), y_grid.ravel()])).reshape(x_grid.shape) * len(x)
+    x_grid = x_grid - redshift
+    y_grid = y_grid - dist - absorbtion
+    return (x_grid, y_grid, z_grid)
 
+
+@lru_cache(maxsize=16, typed=False)
+def get_kde_computation_part(x, y):
+    x = np.array(x)
+    y = np.array(y)
+    xy = np.vstack([x, y])
+
+    x_grid = np.linspace(min(x), max(x), num=150)
+    y_grid = np.linspace(min(y), max(y), num=250)
+    x_grid, y_grid = np.meshgrid(x_grid, y_grid)
+
+    kde = gaussian_kde(xy, bw_method=0.1)
+    z_grid = kde(np.vstack([x_grid.ravel(), y_grid.ravel()])).reshape(x_grid.shape) * len(x)
     return (x_grid, y_grid, z_grid)
 
 

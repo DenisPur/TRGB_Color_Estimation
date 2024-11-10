@@ -3,6 +3,7 @@ import io
 from fpdf import FPDF
 from PIL import Image
 
+
 def read_file(filename):
     data = pd.read_csv(filename, sep=',')
     mandatory_column_names = ['x', 'y', 'mag_v', 'err_v', 'mag_i', 'err_i']
@@ -24,6 +25,10 @@ def check_available_columns(data):
     for col in column_names.keys():
         columns_available[col] = all([c in data.columns for c in column_names[col]])
     return columns_available
+
+
+def mask_based_on_cells_density(data, number_of_cells, threshold):
+    pass
 
 
 def create_pdf_out_of_figures(fig_list):

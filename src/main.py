@@ -31,7 +31,9 @@ from src.infra import (
 from src.simple_charts import ( 
     get_overview_chart, 
     gat_clearing_chart, 
-    get_masking_chart, 
+    get_masking_chart,
+    get_cells_chart,
+    get_masked_cells_chart,
     get_abs_mag_chart,
     get_kde
 )
@@ -222,7 +224,7 @@ class MainWindow(QMainWindow):
         window.ui.enter_y_bottom.setValue(y_min)
         window.ui.enter_y_top.setValue(y_max)
 
-        def apply_mask():
+        def apply_rect_mask():
             x_left = window.ui.enter_x_left.value()
             x_right = window.ui.enter_x_right.value()
             x_left, x_right = sorted([x_left, x_right])
@@ -230,29 +232,52 @@ class MainWindow(QMainWindow):
             y_top = window.ui.enter_y_top.value()
             y_bottom, y_top = sorted([y_bottom, y_top])
             borders = [x_left, x_right, y_bottom, y_top]
+            take_external = window.ui.check_inverse_rect_select.checkState() == 2
 
             eps = 0.1
             masking = ((self.data['x'] > x_left - eps) & 
                        (self.data['x'] < x_right + eps) &
                        (self.data['y'] > y_bottom - eps) &
                        (self.data['y'] < y_top + eps))
+            if take_external:
+                masking = ~ masking
             return borders, masking
 
-        def preview():
-            borders, masking = apply_mask()
+        def preview_rect():
+            borders, masking = apply_rect_mask()
             fig = get_masking_chart(self.data, masking, borders)
             fig.show()
 
+        def preview_cells():
+            number_of_cells = window.ui.enter_number_of_cells.value()
+            fig = get_cells_chart(self.data, number_of_cells)
+            fig.show()
+
+        def preview_dens():
+            number_of_cells = window.ui.enter_number_of_cells.value()
+            threshold = window.ui.enter_threshold.value()
+            fig = get_masked_cells_chart(self.data, number_of_cells, threshold)
+            fig.show()
+
         def saving():
-            borders, masking = apply_mask()
-            self.fig_mask = get_masking_chart(self.data, masking, borders)
-            self.data = self.data[masking]
-            self.ui.button_view_masking.setEnabled(True)
-            self.ui.group_distance.setEnabled(True)
+            if window.ui.tabWidget.currentIndex == 0:
+                borders, masking = apply_rect_mask()
+                self.fig_mask = get_masking_chart(self.data, masking, borders)
+                self.data = self.data[masking]
+                self.ui.button_view_masking.setEnabled(True)
+                self.ui.group_distance.setEnabled(True)
+            else:
+                pass
 
             self.mask_used = True
 
-        window.ui.button_preview.clicked.connect(preview)
+        window.ui.slider_threshold.valueChanged.connect(window.ui.enter_threshold.setValue)
+        window.ui.enter_threshold.valueChanged.connect(window.ui.slider_threshold.setValue)
+
+        window.ui.button_preview_rect.clicked.connect(preview_rect)
+        window.ui.button_preview_cells.clicked.connect(preview_cells)
+        window.ui.button_preview_dens.clicked.connect(preview_dens)
+
         window.ui.buttonBox.accepted.connect(saving)
         # window.ui.buttonBox.rejected.connect()
         window.show()
