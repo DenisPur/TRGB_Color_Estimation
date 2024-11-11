@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_files/mask_creation_test.ui'
+# Form implementation generated from reading ui file 'ui_files/mask_creation.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.11
 #
@@ -11,7 +11,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Masking_Dialog(object):
+class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(395, 364)
@@ -37,6 +37,7 @@ class Ui_Masking_Dialog(object):
         self.gridLayout_2.addWidget(self.label_x_min, 0, 1, 1, 1)
         self.enter_x_left = QtWidgets.QDoubleSpinBox(self.tab_rect)
         self.enter_x_left.setDecimals(1)
+        self.enter_x_left.setSingleStep(10.0)
         self.enter_x_left.setProperty("value", 0.0)
         self.enter_x_left.setObjectName("enter_x_left")
         self.gridLayout_2.addWidget(self.enter_x_left, 1, 1, 1, 1)
@@ -50,6 +51,7 @@ class Ui_Masking_Dialog(object):
         self.gridLayout_2.addItem(spacerItem, 0, 4, 1, 1)
         self.enter_x_right = QtWidgets.QDoubleSpinBox(self.tab_rect)
         self.enter_x_right.setDecimals(1)
+        self.enter_x_right.setSingleStep(10.0)
         self.enter_x_right.setObjectName("enter_x_right")
         self.gridLayout_2.addWidget(self.enter_x_right, 1, 3, 1, 1)
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -59,7 +61,7 @@ class Ui_Masking_Dialog(object):
         self.gridLayout.setObjectName("gridLayout")
         self.enter_y_bottom = QtWidgets.QDoubleSpinBox(self.tab_rect)
         self.enter_y_bottom.setDecimals(1)
-        self.enter_y_bottom.setSingleStep(0.1)
+        self.enter_y_bottom.setSingleStep(10.0)
         self.enter_y_bottom.setProperty("value", 0.0)
         self.enter_y_bottom.setObjectName("enter_y_bottom")
         self.gridLayout.addWidget(self.enter_y_bottom, 3, 1, 1, 1)
@@ -74,6 +76,7 @@ class Ui_Masking_Dialog(object):
         self.gridLayout.addWidget(self.label_y_max, 2, 3, 1, 1)
         self.enter_y_top = QtWidgets.QDoubleSpinBox(self.tab_rect)
         self.enter_y_top.setDecimals(1)
+        self.enter_y_top.setSingleStep(10.0)
         self.enter_y_top.setObjectName("enter_y_top")
         self.gridLayout.addWidget(self.enter_y_top, 3, 3, 1, 1)
         spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -148,7 +151,7 @@ class Ui_Masking_Dialog(object):
         self.verticalLayout.addWidget(self.buttonBox)
 
         self.retranslateUi(Dialog)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         self.buttonBox.rejected.connect(Dialog.reject) # type: ignore
         self.buttonBox.accepted.connect(Dialog.accept) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -167,13 +170,13 @@ class Ui_Masking_Dialog(object):
         self.label_y_min.setText(_translate("Dialog", "<html><head/><body><p align=\"center\">min</p></body></html>"))
         self.label_y.setText(_translate("Dialog", "<html><head/><body><p align=\"center\">≤ y ≤ </p></body></html>"))
         self.label_y_max.setText(_translate("Dialog", "<html><head/><body><p align=\"center\">max</p></body></html>"))
-        self.button_preview_rect.setText(_translate("Dialog", "Предпросмотр"))
+        self.button_preview_rect.setText(_translate("Dialog", "Preview"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_rect), _translate("Dialog", "Rectangular"))
         self.text_instructions_2.setHtml(_translate("Dialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'Cantarell\'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">TBA</p></body></html>"))
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Вivide the instrument field into cells and select the stars from those where the density is minimal (maximum).</p></body></html>"))
         self.label_number_of_cells.setText(_translate("Dialog", "The number of cells ="))
         self.button_preview_cells.setText(_translate("Dialog", "Preview"))
         self.check_inverse_dens_select.setText(_translate("Dialog", "Select the densest regions"))

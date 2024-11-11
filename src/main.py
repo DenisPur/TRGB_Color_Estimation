@@ -21,7 +21,7 @@ from PyQt5.QtWidgets import (
 
 from src.main_window_ui import Ui_MainWindow
 from src.clearing_ui import Ui_Clearing_Dialog
-from src.masking_ui import Ui_Masking_Dialog
+from src.masking_ui import Ui_Dialog as Ui_Masking_Dialog
 
 from src.infra import (
     read_file, 
@@ -257,7 +257,10 @@ class MainWindow(QMainWindow):
         def preview_dens():
             number_of_cells = window.ui.enter_number_of_cells.value()
             threshold = window.ui.enter_threshold.value() / 100
+            take_external = window.ui.check_inverse_dens_select.checkState() == 2
             mask = mask_based_on_cells_density(self.data, number_of_cells, threshold)
+            if take_external:
+                mask = ~ mask
             fig = get_masked_cells_chart(self.data, number_of_cells, mask)
             fig.show()
 
@@ -269,7 +272,10 @@ class MainWindow(QMainWindow):
             elif window.ui.tabWidget.currentIndex() == 1:
                 number_of_cells = window.ui.enter_number_of_cells.value()
                 threshold = window.ui.enter_threshold.value() / 100
-                mask = mask_based_on_cells_density(self.data, number_of_cells, threshold)  
+                take_external = window.ui.check_inverse_dens_select.checkState() == 2
+                mask = mask_based_on_cells_density(self.data, number_of_cells, threshold) 
+                if take_external:
+                    mask = ~ mask
                 self.fig_mask = get_masked_cells_chart(self.data, number_of_cells, mask)
             else:
                 print(window.ui.tabWidget.currentIndex())
