@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import io
 from fpdf import FPDF
 from PIL import Image
@@ -27,8 +28,33 @@ def check_available_columns(data):
     return columns_available
 
 
-def mask_based_on_cells_density(data, number_of_cells, threshold):
-    pass
+def mask_based_on_cells_density(data, cells_num, threshold):
+    x = np.array(data['x'].values)
+    y = np.array(data['y'].values)
+    x_min, x_max = x.min(), x.max()
+    y_min, y_max = y.min(), y.max()
+
+    # x_grid = np.linspace(start=x.min(), stop=x.max(), num=cells_num+1)
+    # y_grid = np.linspace(start=y.min(), stop=y.max(), num=cells_num+1)
+    
+    cells_count = np.zeros(shape=(cells_num, cells_num))
+    nx = np.zeros(len(data), dtype=np.int8)
+    ny = np.zeros(len(data), dtype=np.int8)
+    eps = 1e-8
+
+    for i, (x_i, y_i) in enumerate(zip(x, y)):
+        nx[i] = int((cells_num) * (x_i - x_min) / (x_max + eps - x_min))
+        ny[i] = int((cells_num) * (y_i - y_min) / (y_max + eps - y_min))
+        cells_count[nx[i], ny[i]] += 1
+
+    max_count = cells_count.max()
+    count_limit = threshold * max_count
+
+    bool_mask = np.zeros(shape=len(data), dtype=bool)
+    for i, (nx_i, ny_i) in enumerate(zip(nx, ny)):
+        bool_mask[i] = (cells_count[nx_i, ny_i] <= count_limit)
+
+    return bool_mask
 
 
 def create_pdf_out_of_figures(fig_list):

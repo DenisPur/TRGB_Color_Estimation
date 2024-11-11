@@ -26,9 +26,10 @@ from src.masking_ui import Ui_Masking_Dialog
 from src.infra import (
     read_file, 
     check_available_columns, 
+    mask_based_on_cells_density,
     create_pdf_out_of_figures
 )
-from src.simple_charts import ( 
+from src.main_charts import ( 
     get_overview_chart, 
     gat_clearing_chart, 
     get_masking_chart,
@@ -255,21 +256,27 @@ class MainWindow(QMainWindow):
 
         def preview_dens():
             number_of_cells = window.ui.enter_number_of_cells.value()
-            threshold = window.ui.enter_threshold.value()
-            fig = get_masked_cells_chart(self.data, number_of_cells, threshold)
+            threshold = window.ui.enter_threshold.value() / 100
+            mask = mask_based_on_cells_density(self.data, number_of_cells, threshold)
+            fig = get_masked_cells_chart(self.data, number_of_cells, mask)
             fig.show()
 
         def saving():
-            if window.ui.tabWidget.currentIndex == 0:
-                borders, masking = apply_rect_mask()
-                self.fig_mask = get_masking_chart(self.data, masking, borders)
-                self.data = self.data[masking]
-                self.ui.button_view_masking.setEnabled(True)
-                self.ui.group_distance.setEnabled(True)
-            else:
-                pass
-
             self.mask_used = True
+            if window.ui.tabWidget.currentIndex() == 0:
+                borders, mask = apply_rect_mask()
+                self.fig_mask = get_masking_chart(self.data, mask, borders)
+            elif window.ui.tabWidget.currentIndex() == 1:
+                number_of_cells = window.ui.enter_number_of_cells.value()
+                threshold = window.ui.enter_threshold.value() / 100
+                mask = mask_based_on_cells_density(self.data, number_of_cells, threshold)  
+                self.fig_mask = get_masked_cells_chart(self.data, number_of_cells, mask)
+            else:
+                print(window.ui.tabWidget.currentIndex())
+                raise ValueError
+            self.data = self.data[mask]
+            self.ui.button_view_masking.setEnabled(True)
+            self.ui.group_distance.setEnabled(True)
 
         window.ui.slider_threshold.valueChanged.connect(window.ui.enter_threshold.setValue)
         window.ui.enter_threshold.valueChanged.connect(window.ui.slider_threshold.setValue)
