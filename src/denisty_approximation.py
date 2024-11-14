@@ -59,7 +59,7 @@ def get_density_chart(data, params, smoothing_bw):
         params['i_level'], 
         xerr=params['mean_color_error'], 
         yerr=params['mean_i_error'],
-        color='xkcd:dark purple',
+        color='xkcd:light red',
         label=f'$\Delta$I    : {params["mean_i_error"]:1.3f} \n$\Delta$V-I : {params["mean_color_error"]:1.3f}'
     )
 
