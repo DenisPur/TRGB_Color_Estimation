@@ -121,7 +121,9 @@ class MainWindow(QMainWindow):
                 self.ui.group_reddening.setEnabled(False)
                 self.ui.button_final_view.setEnabled(False)
                 self.ui.check_add_kde.setEnabled(False)
-                
+
+                self.mask_used = False
+
                 plt.close('all')
 
             except pd.errors.ParserError:
