@@ -459,13 +459,13 @@ class MainWindow(QMainWindow):
             }
         }
 
-        filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON', 'output')
+        filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON')
         if filename != '':
             with open(filename, "w") as out_file:
                 json.dump(data, out_file, indent=4)
 
         figures = [fig_raw_overview, fig_new_overview, fig_absmag, fig_result]
-        filename, _ = QFileDialog.getSaveFileName(self, 'Save PDF', 'output')
+        filename, _ = QFileDialog.getSaveFileName(self, 'Save PDF')
         if filename != '':
             pdf = create_pdf_out_of_figures(figures)
             pdf.output(filename)
@@ -523,12 +523,12 @@ class MainWindow(QMainWindow):
         self.ui.button_save_2.setEnabled(True)
 
     def save_density_results(self, pdf, data):
-        filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON', 'output')
+        filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON')
         if filename != '':
             with open(filename, "w") as out_file:
                 json.dump(data, out_file, indent=4)
 
-        filename, _ = QFileDialog.getSaveFileName(self, 'Save PDF', 'output')
+        filename, _ = QFileDialog.getSaveFileName(self, 'Save PDF')
         if filename != '':
             pdf.output(filename)
 
