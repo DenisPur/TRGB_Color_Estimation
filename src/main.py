@@ -415,17 +415,23 @@ class MainWindow(QMainWindow):
             msg.exec_()
 
     def save_branch_approx(self):
+        params = self.pack_all_branch_approx_parameters_in_dict()
+        
         fig_raw_overview = get_overview_chart(self.data_raw, point_size=2)
         fig_raw_overview.suptitle('Raw data')
 
         fig_new_overview = get_overview_chart(self.data, point_size=2)
         fig_new_overview.suptitle('Cleaned data')
 
-        fig_absmag = get_abs_mag_chart(
-            self.data, self.dist, self.redshift, self.absorbtion, kde=False, point_size=2
-        )
+        fig_absmag_1 = get_abs_mag_chart(
+            self.data, params['dist'], params['redshift'], params['absorbtion'], 
+            kde=False, point_size=2)
 
-        params = self.pack_all_branch_approx_parameters_in_dict()
+        kde = get_kde(self.data, self.dist, self.redshift, self.absorbtion)
+        fig_absmag_2 = get_abs_mag_chart(
+            self.data, params['dist'], params['redshift'], params['absorbtion'], 
+            kde=kde, point_size=2)
+
         chosen_bool, inliers_bool, f_approx, f_std = branch_two_step_analythis_support_functions(self.data, params)
         
         fig_result = calculate_branch_double_chart(self.data, params, chosen_bool, inliers_bool, f_approx, f_std)
@@ -466,7 +472,7 @@ class MainWindow(QMainWindow):
             with open(filename, "w") as out_file:
                 json.dump(data, out_file, indent=4)
 
-        figures = [fig_raw_overview, fig_new_overview, fig_absmag, fig_result]
+        figures = [fig_raw_overview, fig_new_overview, fig_absmag_1, fig_absmag_2, fig_result]
         filename, _ = QFileDialog.getSaveFileName(self, 'Save PDF')
         if filename != '':
             pdf = create_pdf_out_of_figures(figures)
