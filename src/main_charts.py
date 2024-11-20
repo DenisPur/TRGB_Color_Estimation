@@ -8,19 +8,18 @@ from scipy.stats import gaussian_kde
 from functools import lru_cache
 
 
-def get_overview_chart(data, point_size=2):
+def get_overview_chart(data, boundries_for_overview, point_size=2):
     fig, axs = plt.subplots(1, 2, layout='tight', figsize=[16,9])
     
-    low = np.percentile(data['color_vi'].values, 1.5)
-    upp = np.percentile(data['color_vi'].values, 98.5)
+    color_low, color_high, x_ax_low, x_ax_high, y_ax_low, y_ax_high = boundries_for_overview
     
-    norm=Normalize(vmin=low, vmax=upp, clip=False)
+    norm=Normalize(vmin=color_low, vmax=color_high, clip=False)
     palette='rainbow'
 
     sns.scatterplot(
         data=data, x='x', y='y', 
         hue='color_vi', palette=palette,
-        hue_norm=Normalize(vmin=low, vmax=upp, clip=False),
+        hue_norm=Normalize(vmin=color_low, vmax=color_high, clip=False),
         alpha=1.0, s=point_size, 
         ax=axs[0]
     )
@@ -34,6 +33,8 @@ def get_overview_chart(data, point_size=2):
         )
     axs[0].set_xlabel('x $_{[px]}$', size = 12)
     axs[0].set_ylabel('y $_{[px]}$', size = 12)
+    axs[0].set_xlim((x_ax_low, x_ax_high))
+    axs[0].set_ylim((y_ax_low, y_ax_high))
     axs[0].grid(linestyle=':')
     axs[0].get_legend().remove()
     axs[0].set_title('Instrument field (with (V-I) colors)')

@@ -124,6 +124,8 @@ class MainWindow(QMainWindow):
 
                 self.mask_used = False
 
+                self.boundries_for_overview = self.save_boundries_for_overview_chart()
+
                 plt.close('all')
 
             except pd.errors.ParserError:
@@ -134,8 +136,18 @@ class MainWindow(QMainWindow):
                 msg.setWindowTitle("Error")
                 msg.exec_()
 
+    def save_boundries_for_overview_chart(self):
+        color_low = np.percentile(self.data['color_vi'].values, 1.5)
+        color_high = np.percentile(self.data['color_vi'].values, 98.5)
+
+        x_ax_low = self.data['x'].values.min() - 0.05
+        x_ax_high = self.data['x'].values.max() + 0.05
+        y_ax_low = self.data['y'].values.min() - 0.05
+        y_ax_high = self.data['y'].values.max() + 0.05
+        return color_low, color_high, x_ax_low, x_ax_high, y_ax_low, y_ax_high
+
     def first_preview(self):
-        fig_raw = get_overview_chart(self.data)
+        fig_raw = get_overview_chart(self.data, self.boundries_for_overview)
         fig_raw.suptitle('Raw data')
         fig_raw.show()
 
@@ -417,10 +429,10 @@ class MainWindow(QMainWindow):
     def save_branch_approx(self):
         params = self.pack_all_branch_approx_parameters_in_dict()
         
-        fig_raw_overview = get_overview_chart(self.data_raw, point_size=2)
+        fig_raw_overview = get_overview_chart(self.data_raw, self.boundries_for_overview, point_size=2)
         fig_raw_overview.suptitle('Raw data')
 
-        fig_new_overview = get_overview_chart(self.data, point_size=2)
+        fig_new_overview = get_overview_chart(self.data, self.boundries_for_overview, point_size=2)
         fig_new_overview.suptitle('Cleaned data')
 
         fig_absmag_1 = get_abs_mag_chart(
@@ -543,10 +555,10 @@ class MainWindow(QMainWindow):
     def calculate_density_approach(self):
         params = self.pack_all_density_parameters_in_dict()
 
-        fig_raw_overview = get_overview_chart(self.data_raw, point_size=2)
+        fig_raw_overview = get_overview_chart(self.data_raw, self.boundries_for_overview, point_size=2)
         fig_raw_overview.suptitle('Raw data')
 
-        fig_new_overview = get_overview_chart(self.data, point_size=2)
+        fig_new_overview = get_overview_chart(self.data, self.boundries_for_overview, point_size=2)
         fig_new_overview.suptitle('Cleaned data')
 
         fig_absmag_1 = get_abs_mag_chart(
