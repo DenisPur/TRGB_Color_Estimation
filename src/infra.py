@@ -3,9 +3,10 @@ import numpy as np
 import io
 from fpdf import FPDF
 from PIL import Image
+import matplotlib.pyplot as plt
 
 
-def read_file(filename):
+def read_file(filename: str) -> pd.DataFrame:
     data = pd.read_csv(filename, sep=',')
     mandatory_column_names = ['x', 'y', 'mag_v', 'err_v', 'mag_i', 'err_i']
     for name in mandatory_column_names:
@@ -15,7 +16,7 @@ def read_file(filename):
     return data
 
 
-def check_available_columns(data):
+def check_available_columns(data: pd.DataFrame) -> dict:
     column_names = {'type':['type',], 
                     'mag':['mag_v', 'mag_i'],
                     'snr':['snr_v', 'snr_i'],
@@ -28,7 +29,9 @@ def check_available_columns(data):
     return columns_available
 
 
-def mask_based_on_cells_density(data, cells_num, threshold):
+def mask_based_on_cells_density(data: pd.DataFrame, 
+                                cells_num: int, 
+                                threshold: float) -> np.array:
     x = np.array(data['x'].values)
     y = np.array(data['y'].values)
     x_min, x_max = x.min(), x.max()
@@ -57,7 +60,7 @@ def mask_based_on_cells_density(data, cells_num, threshold):
     return bool_mask
 
 
-def create_pdf_out_of_figures(fig_list):
+def create_pdf_out_of_figures(fig_list: list[plt.Figure]) -> FPDF:
     pdf = FPDF()
     for fig in fig_list:
         buf = io.BytesIO()

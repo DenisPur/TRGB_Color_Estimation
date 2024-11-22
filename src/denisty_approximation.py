@@ -5,7 +5,10 @@ import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 
 
-def density_choosing_region(data, params):
+def density_choosing_region(
+        data: pd.DataFrame, 
+        params: dict
+    ) -> tuple[pd.Series, float, float, float, float]:
     data['color_vi_real'] = data['color_vi'] - params['redshift']
     data['mag_i_real'] = data['mag_i'] - params['dist'] - params['absorbtion']
 
@@ -29,7 +32,11 @@ def density_choosing_region(data, params):
     return chosen_bool, i_level_low, i_level_high, mean_i_error, mean_color_error
 
 
-def get_density_chart(data, params, smoothing_bw):
+def get_density_chart(
+        data: pd.DataFrame, 
+        params: dict, 
+        smoothing_bw: float
+    ) -> plt.Figure:
     fig, axs = plt.subplots(2, 1, sharex=True, layout='tight', figsize=[9,9])
 
     i_level_low = params['i_level_low']
@@ -40,14 +47,18 @@ def get_density_chart(data, params, smoothing_bw):
     chosen = data[params['chosen_bool']]
     non_chosen = data[~params['chosen_bool']]
 
-    sns.scatterplot(data=non_chosen, 
-                    x='color_vi_real', y='mag_i_real', 
-                    alpha=0.6, s=5, 
-                    ax=axs[0])
-    sns.scatterplot(data=chosen, 
-                    x='color_vi_real', y='mag_i_real', 
-                    alpha=0.8, s=5, color='xkcd:royal blue',
-                    ax=axs[0])
+    sns.scatterplot(
+        data=non_chosen, 
+        x='color_vi_real', y='mag_i_real', 
+        alpha=0.6, s=5, 
+        ax=axs[0]
+    )
+    sns.scatterplot(
+        data=chosen, 
+        x='color_vi_real', y='mag_i_real', 
+        alpha=0.8, s=5, color='xkcd:royal blue',
+        ax=axs[0]
+    )
     axs[0].plot(
         [vi_left, vi_left, vi_right, vi_right, vi_left],
         [i_level_low, i_level_high, i_level_high, i_level_low, i_level_low],

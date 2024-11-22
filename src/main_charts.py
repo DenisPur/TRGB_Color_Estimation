@@ -8,7 +8,11 @@ from scipy.stats import gaussian_kde
 from functools import lru_cache
 
 
-def get_overview_chart(data, boundries_for_overview, point_size=2):
+def get_overview_chart(
+        data: pd.DataFrame, 
+        boundries_for_overview: list[int], 
+        point_size: float=2
+    ) -> plt.Figure:
     fig, axs = plt.subplots(1, 2, layout='tight', figsize=[16,9])
     
     color_low, color_high, x_ax_low, x_ax_high, y_ax_low, y_ax_high = boundries_for_overview
@@ -30,7 +34,7 @@ def get_overview_chart(data, boundries_for_overview, point_size=2):
         fraction=0.03,
         pad=0.10,
         label='V-I $_{[mag]}$'
-        )
+    )
     axs[0].set_xlabel('x $_{[px]}$', size = 12)
     axs[0].set_ylabel('y $_{[px]}$', size = 12)
     axs[0].set_xlim((x_ax_low, x_ax_high))
@@ -52,8 +56,13 @@ def get_overview_chart(data, boundries_for_overview, point_size=2):
     return fig
 
 
-def gat_clearing_chart(clean, dirty, point_size=2):
+def gat_clearing_chart(
+        clean: pd.DataFrame, 
+        dirty: pd.DataFrame, 
+        point_size: float=2
+    ) -> plt.Figure:
     fig, axs = plt.subplots(1, 2, layout='tight', figsize=[16,9])
+
     sns.scatterplot(
         data=dirty, x='x', y='y', 
         alpha=0.8, s=point_size, c='xkcd:bright red',
@@ -91,8 +100,12 @@ def gat_clearing_chart(clean, dirty, point_size=2):
     return fig
 
 
-def get_masking_chart(data, mask, borders, point_size=2):
-    x_left, x_right, y_bottom, y_top = borders
+def get_masking_chart(
+        data: pd.DataFrame, 
+        mask: pd.DataFrame, 
+        borders: list[int], 
+        point_size: float=2
+    ) -> plt.Figure:
 
     fig, axs = plt.subplots(1, 2, layout='tight', figsize=[16,9])
     sns.scatterplot(
@@ -105,6 +118,8 @@ def get_masking_chart(data, mask, borders, point_size=2):
         alpha=0.8, s=point_size, c='xkcd:sea blue',
         ax=axs[0]
     )
+    
+    x_left, x_right, y_bottom, y_top = borders
     axs[0].plot(
         [x_left, x_left, x_right, x_right, x_left], 
         [y_bottom, y_top, y_top, y_bottom, y_bottom], 
@@ -137,14 +152,29 @@ def get_masking_chart(data, mask, borders, point_size=2):
     return fig
 
 
-def get_cells_chart(data, number_of_cells, point_size=2):
+def get_cells_chart(
+        data: pd.DataFrame, 
+        number_of_cells: int, 
+        point_size: float=2
+    ) -> plt.Figure:
+    
     fig, ax = plt.subplots(layout='tight', figsize=[10,9])
     sns.scatterplot(
         data=data, x='x', y='y', 
         alpha=0.8, s=point_size, color='xkcd:sea blue'
     )
-    x_grid = np.linspace(start=data['x'].min(), stop=data['x'].max(), num=number_of_cells+1)
-    y_grid = np.linspace(start=data['y'].min(), stop=data['y'].max(), num=number_of_cells+1)
+    
+    x_grid = np.linspace(
+        start=data['x'].min(), 
+        stop=data['x'].max(), 
+        num=number_of_cells+1
+    )
+    y_grid = np.linspace(
+        start=data['y'].min(), 
+        stop=data['y'].max(), 
+        num=number_of_cells+1
+    )
+    
     for x in x_grid:
         ax.plot(
             [x, x], [data['y'].min(), data['y'].max()],
@@ -155,6 +185,7 @@ def get_cells_chart(data, number_of_cells, point_size=2):
             [data['x'].min(), data['x'].max()], [y, y],
             alpha=0.8, ls=':', lw=1, color='black'
         )
+    
     sns.histplot(
         data=data, x='x', y='y', 
         bins=[x_grid, y_grid], 
@@ -168,7 +199,13 @@ def get_cells_chart(data, number_of_cells, point_size=2):
     return fig
 
 
-def get_masked_cells_chart(data, number_of_cells, bool_mask, point_size=2):
+def get_masked_cells_chart(
+        data: pd.DataFrame, 
+        number_of_cells: int, 
+        bool_mask: pd.Series, 
+        point_size: float=2
+    ) -> plt.Figure:
+
     fig, axs = plt.subplots(1, 2, layout='tight', figsize=[16,9])
     sns.scatterplot(
         data=data[bool_mask], x='x', y='y', 
@@ -180,8 +217,18 @@ def get_masked_cells_chart(data, number_of_cells, bool_mask, point_size=2):
         alpha=0.8, s=point_size, color='xkcd:light red',
         ax=axs[0]
     )
-    x_grid = np.linspace(start=data['x'].min(), stop=data['x'].max(), num=number_of_cells+1)
-    y_grid = np.linspace(start=data['y'].min(), stop=data['y'].max(), num=number_of_cells+1)
+
+    x_grid = np.linspace(
+        start=data['x'].min(), 
+        stop=data['x'].max(), 
+        num=number_of_cells+1
+    )
+    y_grid = np.linspace(
+        start=data['y'].min(), 
+        stop=data['y'].max(), 
+        num=number_of_cells+1
+    )
+    
     for x in x_grid:
         axs[0].plot(
             [x, x], [data['y'].min(), data['y'].max()],
@@ -219,7 +266,13 @@ def get_masked_cells_chart(data, number_of_cells, bool_mask, point_size=2):
     return fig
 
 
-def get_kde(data, dist, redshift, absorbtion):
+def get_kde(
+        data: pd.DataFrame, 
+        dist: float, 
+        redshift: float, 
+        absorbtion: float
+    ) -> tuple[np.array, np.array, np.array]:
+
     x_raw = data['color_vi'].to_numpy(dtype=np.float32)
     y_raw = data['mag_i'].to_numpy(dtype=np.float32)
     x_grid, y_grid, z_grid = get_kde_computation_part(tuple(x_raw), tuple(y_raw))
@@ -230,7 +283,11 @@ def get_kde(data, dist, redshift, absorbtion):
 
 
 @lru_cache(maxsize=16, typed=False)
-def get_kde_computation_part(x, y):
+def get_kde_computation_part(
+        x: tuple[int, ...], 
+        y: tuple[int, ...]
+    ) -> tuple[np.array, np.array, np.array]:
+
     x = np.array(x)
     y = np.array(y)
     xy = np.vstack([x, y])
@@ -244,7 +301,15 @@ def get_kde_computation_part(x, y):
     return (x_grid, y_grid, z_grid)
 
 
-def get_abs_mag_chart(data, dist, redshift, absorbtion, kde=None, point_size=2):
+def get_abs_mag_chart(
+        data: pd.DataFrame, 
+        dist: float, 
+        redshift: float, 
+        absorbtion: float, 
+        kde: None | tuple[np.array, np.array, np.array]=None, 
+        point_size: float=2
+    ) -> plt.Figure:
+    
     if kde:
         fig, ax = plt.subplots(layout='tight', figsize=[9,9])
     else:

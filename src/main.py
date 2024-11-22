@@ -68,7 +68,7 @@ class MainWindow(QMainWindow):
 
         # first tab
         self.ui.button_chose_file.clicked.connect(self.open_file)
-        self.ui.button_view_chosen.clicked.connect(self.first_preview)
+        self.ui.button_reload.clicked.connect(self.reload_file)
 
         self.ui.button_clearing.clicked.connect(self.open_clearing_dialog)
         self.ui.button_view_clearing.clicked.connect(self.view_clearing_result)
@@ -76,18 +76,17 @@ class MainWindow(QMainWindow):
         self.ui.button_masking.clicked.connect(self.open_masking_dialog)
         self.ui.button_view_masking.clicked.connect(self.view_masking_result)
 
+        self.ui.button_view_cmd_field.clicked.connect(self.view_cmd_field)
+        self.ui.button_export_csv.clicked.connect(self.export_cmd)
+
         self.ui.enter_mpcs.valueChanged.connect(self.mpcs_changed)
         self.ui.enter_mags.valueChanged.connect(self.mags_changed)
-        self.ui.buttons_distance.accepted.connect(self.write_distance)
-        self.ui.buttons_distance.rejected.connect(self.empty_distance)
 
         self.ui.enter_coef_1.valueChanged.connect(self.recalculate_reddening_labels)
         self.ui.enter_coef_2.valueChanged.connect(self.recalculate_reddening_labels)
         self.ui.enter_b_minus_v.valueChanged.connect(self.recalculate_reddening_labels)
-        self.ui.buttons_reddening.accepted.connect(self.write_reddening)
-        self.ui.buttons_reddening.rejected.connect(self.empty_reddening)
 
-        self.ui.button_final_view.clicked.connect(self.view_chart_manager)
+        self.ui.button_view_abs_cmd.clicked.connect(self.view_chart_manager)
 
         # second tab
         self.ui.button_view_spatial.clicked.connect(self.view_branch)
@@ -99,6 +98,12 @@ class MainWindow(QMainWindow):
 
         # var
         self.mask_used = False
+        self.dist = 0
+        self.dist_in_mpcs = 0
+
+        # pyqt5 bug
+        self.ui.group_view_export_changes.setEnabled(False)
+        self.ui.group_view_cmd_abs.setEnabled(False)
 
     ##########################################################################
 
@@ -107,27 +112,7 @@ class MainWindow(QMainWindow):
         self.file_path, _ = QFileDialog.getOpenFileName(widget, 'Open File')
         if self.file_path:
             try:
-                self.data = read_file(self.file_path)
-                self.data_raw = self.data.copy()
-                
-                self.ui.label_filename.setText(self.file_path)
-                self.ui.button_view_chosen.setEnabled(True)
-                self.ui.group_clearing.setEnabled(True)
-
-                self.ui.button_view_clearing.setEnabled(False)
-                self.ui.group_masking.setEnabled(False)
-                self.ui.button_view_masking.setEnabled(False)
-                self.ui.group_distance.setEnabled(False)
-                self.ui.group_reddening.setEnabled(False)
-                self.ui.button_final_view.setEnabled(False)
-                self.ui.check_add_kde.setEnabled(False)
-
-                self.mask_used = False
-
-                self.boundries_for_overview = self.save_boundries_for_overview_chart()
-
-                plt.close('all')
-
+                self.load_file(self.file_path)
             except pd.errors.ParserError:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Critical)
@@ -136,7 +121,33 @@ class MainWindow(QMainWindow):
                 msg.setWindowTitle("Error")
                 msg.exec_()
 
-    def save_boundries_for_overview_chart(self):
+    def reload_file(self):
+        self.load_file(self.file_path)
+
+    def load_file(self, filename):
+        self.data = read_file(filename)
+        self.data_raw = self.data.copy()
+        
+        self.ui.label_filename.setText(filename)
+
+        self.ui.group_clearing.setEnabled(True)
+        self.ui.group_masking.setEnabled(True)
+        self.ui.group_view_export_changes.setEnabled(True)
+
+        self.ui.group_distance.setEnabled(True)
+        self.ui.group_reddening.setEnabled(True)
+        self.ui.group_view_cmd_abs.setEnabled(True)
+
+        self.ui.button_reload.setEnabled(True)
+
+        self.ui.button_view_clearing.setEnabled(False)
+        self.ui.button_view_masking.setEnabled(False)
+
+        self.mask_used = False
+        self.boundries_for_overview = self.save_boundries_for_overview_chart()
+        plt.close('all')
+
+    def save_boundries_for_overview_chart(self) -> list[float]:
         color_low = np.percentile(self.data['color_vi'].values, 1.5)
         color_high = np.percentile(self.data['color_vi'].values, 98.5)
 
@@ -144,12 +155,19 @@ class MainWindow(QMainWindow):
         x_ax_high = self.data['x'].values.max() + 0.05
         y_ax_low = self.data['y'].values.min() - 0.05
         y_ax_high = self.data['y'].values.max() + 0.05
-        return color_low, color_high, x_ax_low, x_ax_high, y_ax_low, y_ax_high
+        return [color_low, color_high, x_ax_low, x_ax_high, y_ax_low, y_ax_high]
 
-    def first_preview(self):
+    ##########################################################################
+
+    def view_cmd_field(self):
         fig_raw = get_overview_chart(self.data, self.boundries_for_overview)
-        fig_raw.suptitle('Raw data')
         fig_raw.show()
+
+    def export_cmd(self):
+        filename, _ = QFileDialog.getSaveFileName(self, 'Export CSV')
+        if filename != '':
+            with open(filename, "w") as out_file:
+                self.data.to_csv(filename, index=None)
 
     ##########################################################################
 
@@ -172,7 +190,7 @@ class MainWindow(QMainWindow):
         window.ui.check_crowd.setChecked(columns_availability['crowd'])
         window.ui.check_crowd.setEnabled(columns_availability['crowd'])
 
-        def mark_clean_rows():
+        def mark_clean_rows() -> pd.Series:
             marking = (self.data['mag_v'] == self.data['mag_v'])
 
             if window.ui.check_type.isChecked():
@@ -239,7 +257,7 @@ class MainWindow(QMainWindow):
         window.ui.enter_y_bottom.setValue(y_min)
         window.ui.enter_y_top.setValue(y_max)
 
-        def apply_rect_mask():
+        def apply_rect_mask() -> tuple[list[float], pd.Series]:
             x_left = window.ui.enter_x_left.value()
             x_right = window.ui.enter_x_right.value()
             x_left, x_right = sorted([x_left, x_right])
@@ -314,65 +332,54 @@ class MainWindow(QMainWindow):
 
     ##########################################################################
 
-    def mpcs_changed(self, value):
+    def mpcs_changed(self, value: float):
         if (value > 0):
             dist_mags = 5 * np.log10(value * 1e5)
         else:
             dist_mags = 0
+        self.dist_in_mpcs = value
+        self.dist = dist_mags
+        
         self.ui.enter_mags.blockSignals(True)
         self.ui.enter_mags.setValue(dist_mags)
         self.ui.enter_mags.blockSignals(False)
-
-    def mags_changed(self, value):
+        
+    def mags_changed(self, value: float):
         dist_mpcs = 10**(value / 5) / 1e5
+        self.dist = value
+        self.dist_in_mpcs = dist_mpcs
+        
         self.ui.enter_mpcs.blockSignals(True)
         self.ui.enter_mpcs.setValue(dist_mpcs)
         self.ui.enter_mpcs.blockSignals(False)
 
-    def write_distance(self):
-        self.dist = self.ui.enter_mags.value()
-        self.dist_in_mpcs = self.ui.enter_mpcs.value()
-        self.ui.group_reddening.setEnabled(True)
-
-    def empty_distance(self):
-        self.ui.enter_mags.setValue(0)
-        self.ui.enter_mpcs.setValue(0)
 
     ##########################################################################
 
-    def write_reddening(self):
-        if (self.ui.tabs_reddening.currentIndex() == 0):
-            self.redshift = self.ui.enter_b_minus_v.value() * self.ui.enter_coef_1.value()
-            self.absorbtion = self.ui.enter_b_minus_v.value() * self.ui.enter_coef_2.value()
-        else:
-            self.redshift = self.ui.enter_redshift.value()
-            self.absorbtion = self.ui.enter_absorbtion.value()
-        self.ui.button_final_view.setEnabled(True)
-        self.ui.check_add_kde.setEnabled(True)
-        self.ui.main_tabs.setTabEnabled(1, True)
-        self.ui.main_tabs.setTabEnabled(2, True)
-
-    def empty_reddening(self):
-            self.ui.enter_b_minus_v.setValue(0.0)
-            self.ui.enter_coef_1.setValue(2.742)
-            self.ui.enter_coef_2.setValue(1.505)
-            self.ui.enter_redshift.setValue(0.0)
-            self.ui.enter_absorbtion.setValue(0.0)
-            self.ui.label_redshift.setText('0.0')
-            self.ui.label_absorbtion.setText('0.0')
-    
     def recalculate_reddening_labels(self):
-        redshift = self.ui.enter_b_minus_v.value() * self.ui.enter_coef_1.value()
+        extinction = self.ui.enter_b_minus_v.value() * self.ui.enter_coef_1.value()
         absorbtion = self.ui.enter_b_minus_v.value() * self.ui.enter_coef_2.value()
-        self.ui.label_redshift.setText(f'{redshift:1.4}')
+        self.ui.label_extinction.setText(f'{extinction:1.4}')
         self.ui.label_absorbtion.setText(f'{absorbtion:1.4}')
+    
+    def get_extinction_absorbtion(self) -> tuple[float, float]:
+        if (self.ui.tabs_reddening.currentIndex() == 0):
+            extinction = self.ui.enter_b_minus_v.value() * self.ui.enter_coef_1.value()
+            absorbtion = self.ui.enter_b_minus_v.value() * self.ui.enter_coef_2.value()
+        elif (self.ui.tabs_reddening.currentIndex() == 1):
+            extinction = self.ui.enter_extinction.value()
+            absorbtion = self.ui.enter_absorbtion.value()
+        else:
+            raise ValueError
+        return extinction, absorbtion
     
     ##########################################################################
     
     def view_chart_manager(self):
         add_kde = self.ui.check_add_kde.checkState() == 2
+        extinction, absorbtion = self.get_extinction_absorbtion()
         if add_kde:
-            self.thread = CalculateKDE(self.data, self.dist, self.redshift, self.absorbtion)
+            self.thread = CalculateKDE(self.data, self.dist, extinction, absorbtion)
             self.thread.started.connect(self.show_final_chart_processing)
             self.thread.finished.connect(self.show_final_chart_done)
             self.thread.result_signal.connect(self.view_filnal_chart)
@@ -381,26 +388,28 @@ class MainWindow(QMainWindow):
             self.view_filnal_chart(kde=None)
 
     def view_filnal_chart(self, kde):
-        fig = get_abs_mag_chart(self.data, self.dist, self.redshift, self.absorbtion, kde=kde)
+        extinction, absorbtion = self.get_extinction_absorbtion()
+        fig = get_abs_mag_chart(self.data, self.dist, extinction, absorbtion, kde=kde)
         fig.show()       
 
     def show_final_chart_processing(self):
-        self.ui.button_final_view.setText("Processing ⏱")
+        self.ui.button_view_abs_cmd.setText("Processing ⏱")
         self.ui.check_add_kde.setEnabled(False)
-        self.ui.button_final_view.setEnabled(False)
+        self.ui.button_view_abs_cmd.setEnabled(False)
 
     def show_final_chart_done(self):
-        self.ui.button_final_view.setText('View in absolute magnitudes')
+        self.ui.button_view_abs_cmd.setText('View in absolute magnitudes')
         self.ui.check_add_kde.setEnabled(True)
-        self.ui.button_final_view.setEnabled(True)
+        self.ui.button_view_abs_cmd.setEnabled(True)
 
     ##########################################################################
     
     def pack_all_branch_approx_parameters_in_dict(self):
+        extinction, absorbtion = self.get_extinction_absorbtion()
         params = {
             'dist':self.dist, 
-            'redshift':self.redshift,
-            'absorbtion':self.absorbtion, 
+            'extinction':extinction,
+            'absorbtion':absorbtion, 
             'i_level':self.ui.enter_level.value(),
             'vi_left':self.ui.enter_vi_left.value(),
             'vi_right':self.ui.enter_vi_right.value(), 
@@ -436,12 +445,12 @@ class MainWindow(QMainWindow):
         fig_new_overview.suptitle('Cleaned data')
 
         fig_absmag_1 = get_abs_mag_chart(
-            self.data, params['dist'], params['redshift'], params['absorbtion'], 
+            self.data, params['dist'], params['extinction'], params['absorbtion'], 
             kde=False, point_size=2)
 
-        kde = get_kde(self.data, self.dist, self.redshift, self.absorbtion)
+        kde = get_kde(self.data, self.dist, extinction, absorbtion)
         fig_absmag_2 = get_abs_mag_chart(
-            self.data, params['dist'], params['redshift'], params['absorbtion'], 
+            self.data, params['dist'], params['extinction'], params['absorbtion'], 
             kde=kde, point_size=2)
 
         chosen_bool, inliers_bool, f_approx, f_std = branch_two_step_analythis_support_functions(self.data, params)
@@ -469,7 +478,7 @@ class MainWindow(QMainWindow):
             'distance high' : params['dist'] + d_p,
             'distance [in mpcs]' : self.dist_in_mpcs,
             'absorbtion (I)' : params['absorbtion'],
-            'redshift (V-I)' : params['redshift'],
+            'extinction (V-I)' : params['extinction'],
             'paramters' : {
                 'vi_left': params['vi_left'],
                 'vi_right': params['vi_right'], 
@@ -495,10 +504,11 @@ class MainWindow(QMainWindow):
     ##########################################################################
 
     def pack_all_density_parameters_in_dict(self):
+        extinction, absorbtion = self.get_extinction_absorbtion()
         params = {
             'dist':self.dist, 
-            'redshift':self.redshift,
-            'absorbtion':self.absorbtion, 
+            'extinction':extinction,
+            'absorbtion':absorbtion, 
             'i_level':self.ui.enter_level_2.value(),
             'd_minus':self.ui.enter_d_minus_2.value(), 
             'd_plus':self.ui.enter_d_plus_2.value(),
@@ -542,7 +552,7 @@ class MainWindow(QMainWindow):
         self.ui.button_save_2.setText('Calculate and save (json + pdf) [may take some time ⏱]')
         self.ui.button_save_2.setEnabled(True)
 
-    def save_density_results(self, pdf, data):
+    def save_density_results(self, pdf: FPDF, data: dict):
         filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON')
         if filename != '':
             with open(filename, "w") as out_file:
@@ -552,7 +562,7 @@ class MainWindow(QMainWindow):
         if filename != '':
             pdf.output(filename)
 
-    def calculate_density_approach(self):
+    def calculate_density_approach(self) -> tuple[FPDF, dict]:
         params = self.pack_all_density_parameters_in_dict()
 
         fig_raw_overview = get_overview_chart(self.data_raw, self.boundries_for_overview, point_size=2)
@@ -562,12 +572,12 @@ class MainWindow(QMainWindow):
         fig_new_overview.suptitle('Cleaned data')
 
         fig_absmag_1 = get_abs_mag_chart(
-            self.data, params['dist'], params['redshift'], params['absorbtion'], 
+            self.data, params['dist'], params['extinction'], params['absorbtion'], 
             kde=False, point_size=2)
 
-        kde = get_kde(self.data, self.dist, self.redshift, self.absorbtion)
+        kde = get_kde(self.data, self.dist, extinction, absorbtion)
         fig_absmag_2 = get_abs_mag_chart(
-            self.data, params['dist'], params['redshift'], params['absorbtion'], 
+            self.data, params['dist'], params['extinction'], params['absorbtion'], 
             kde=kde, point_size=2)
     
         number_of_mc_experiments = self.ui.enter_n_exp.value()
@@ -598,7 +608,7 @@ class MainWindow(QMainWindow):
             'distance high' : params['dist'] + params['d_plus'],
             'distance [in mpcs]' : self.dist_in_mpcs,
             'absorbtion (I)' : params['absorbtion'],
-            'redshift (V-I)' : params['redshift'],
+            'extinction (V-I)' : params['extinction'],
             'paramters' : {
                 'mean number of stars' : num_of_stars,
                 'number of m-c experiments' : number_of_mc_experiments,
@@ -626,7 +636,7 @@ class MainWindow(QMainWindow):
 class CalculateAndSaveDensity(QThread):
     result_signal = pyqtSignal(FPDF, dict)
 
-    def __init__(self, parent):
+    def __init__(self, parent: MainWindow):
         super(CalculateAndSaveDensity, self).__init__()
         self.window = parent
         
@@ -638,13 +648,17 @@ class CalculateAndSaveDensity(QThread):
 class CalculateKDE(QThread):
     result_signal = pyqtSignal(tuple)
 
-    def __init__(self, data, dist, redshift, absorbtion):
+    def __init__(self, 
+                 data: dict, 
+                 dist:float, 
+                 extinction: float, 
+                 absorbtion: float):
         super(CalculateKDE, self).__init__()
         self.data = data
         self.dist = dist 
-        self.redshift = redshift 
+        self.extinction = extinction 
         self.absorbtion = absorbtion        
 
     def run(self):
-        kde = get_kde(self.data, self.dist, self.redshift, self.absorbtion)
+        kde = get_kde(self.data, self.dist, self.extinction, self.absorbtion)
         self.result_signal.emit(kde)
