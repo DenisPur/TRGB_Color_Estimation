@@ -5,52 +5,27 @@ import matplotlib.pyplot as plt
 from fpdf import FPDF
 import json
 
-from PyQt5.QtCore import (
-    QThread, 
-    pyqtSignal,
-    QLocale
-)
+from PyQt5.QtCore import QThread, pyqtSignal, QLocale
+
 from PyQt5.QtWidgets import (
-    QMainWindow, 
-    QApplication, 
-    QWidget, 
-    QDialog, 
-    QFileDialog, 
-    QMessageBox
-)
+    QMainWindow, QApplication, QWidget, QDialog, QFileDialog, QMessageBox)
 
 from src.main_window_ui import Ui_MainWindow
 from src.clearing_ui import Ui_Clearing_Dialog
 from src.masking_ui import Ui_Dialog as Ui_Masking_Dialog
 
 from src.infra import (
-    read_file, 
-    check_available_columns, 
-    mask_based_on_cells_density,
-    create_pdf_out_of_figures
-)
+    read_file, check_available_columns, mask_based_on_cells_density, 
+    create_pdf_out_of_figures, get_kde)
 from src.main_charts import ( 
-    get_overview_chart, 
-    gat_clearing_chart, 
-    get_masking_chart,
-    get_cells_chart,
-    get_masked_cells_chart,
-    get_abs_mag_chart,
-    get_kde
-)
+    get_overview_chart, gat_clearing_chart, get_masking_chart, get_cells_chart,
+    get_masked_cells_chart, get_abs_mag_chart)
 from src.branch_approximation import (
-    branch_two_step_analythis_support_functions, 
-    calculate_branch_double_chart
-)
+    get_marking_and_approx_function, get_branch_approx_chart)
 from src.denisty_approximation import (
-    get_density_chart, 
-    density_choosing_region
-)
+    get_density_chart, density_choosing_region)
 from src.monte_carlo import (
-    plot_histogrm_3x3, 
-    iterate_over_n_experiments, 
-    plot_monte_carlo_results
-)
+    plot_histogrm_3x3, iterate_over_n_experiments, plot_monte_carlo_results)
 
 
 class MainWindow(QMainWindow):
@@ -143,6 +118,9 @@ class MainWindow(QMainWindow):
         self.ui.button_view_clearing.setEnabled(False)
         self.ui.button_view_masking.setEnabled(False)
 
+        self.ui.main_tabs.setTabEnabled(1, True)
+        self.ui.main_tabs.setTabEnabled(2, True)
+
         self.mask_used = False
         self.boundries_for_overview = self.save_boundries_for_overview_chart()
         plt.close('all')
@@ -194,20 +172,28 @@ class MainWindow(QMainWindow):
             marking = (self.data['mag_v'] == self.data['mag_v'])
 
             if window.ui.check_type.isChecked():
-                marking *= (self.data['type'] <= window.ui.enter_type.value())
+                marking *= (
+                    self.data['type'] <= window.ui.enter_type.value())
             if window.ui.check_mag.isChecked():
-                marking *= ((self.data['mag_v'] < window.ui.enter_mag.value()) & 
-                            (self.data['mag_i'] < window.ui.enter_mag.value()))
+                marking *= (
+                    (self.data['mag_v'] < window.ui.enter_mag.value()) 
+                    & (self.data['mag_i'] < window.ui.enter_mag.value()))
             if window.ui.check_snr.isChecked():
-                marking *= ((self.data['snr_v'] >= window.ui.enter_snr.value()) & 
-                            (self.data['snr_i'] >= window.ui.enter_snr.value()))
+                marking *= (
+                    (self.data['snr_v'] >= window.ui.enter_snr.value())
+                    & (self.data['snr_i'] >= window.ui.enter_snr.value()))
             if window.ui.check_sharp.isChecked():
-                marking *= ((self.data['sharp_v'] + self.data['sharp_i'])**2 <= window.ui.enter_sharp.value())
+                marking *= (
+                    (self.data['sharp_v'] + self.data['sharp_i'])**2 
+                    <= window.ui.enter_sharp.value())
             if window.ui.check_flag.isChecked():
-                marking *= ((self.data['flag_v'] <= window.ui.enter_flag.value()) & 
-                            (self.data['flag_i'] <= window.ui.enter_flag.value()))
+                marking *= (
+                    (self.data['flag_v'] <= window.ui.enter_flag.value())
+                    & (self.data['flag_i'] <= window.ui.enter_flag.value()))
             if window.ui.check_crowd.isChecked():
-                marking *= ((self.data['crowd_v'] + self.data['crowd_i']) <= window.ui.enter_crowd.value())
+                marking *= (
+                    (self.data['crowd_v'] + self.data['crowd_i']) 
+                    <= window.ui.enter_crowd.value())
             return marking
 
         def preview():
@@ -268,10 +254,10 @@ class MainWindow(QMainWindow):
             take_external = window.ui.check_inverse_rect_select.checkState() == 2
 
             eps = 0.1
-            masking = ((self.data['x'] > x_left - eps) & 
-                       (self.data['x'] < x_right + eps) &
-                       (self.data['y'] > y_bottom - eps) &
-                       (self.data['y'] < y_top + eps))
+            masking = ((self.data['x'] > x_left - eps) 
+                       & (self.data['x'] < x_right + eps)
+                       & (self.data['y'] > y_bottom - eps)
+                       & (self.data['y'] < y_top + eps))
             if take_external:
                 masking = ~ masking
             return borders, masking
@@ -353,7 +339,6 @@ class MainWindow(QMainWindow):
         self.ui.enter_mpcs.setValue(dist_mpcs)
         self.ui.enter_mpcs.blockSignals(False)
 
-
     ##########################################################################
 
     def recalculate_reddening_labels(self):
@@ -424,8 +409,8 @@ class MainWindow(QMainWindow):
     def view_branch(self):
         params = self.pack_all_branch_approx_parameters_in_dict()
         try:
-            chosen_bool, inliers_bool, f_approx, f_std = branch_two_step_analythis_support_functions(self.data, params)
-            fig = calculate_branch_double_chart(self.data, params, chosen_bool, inliers_bool, f_approx, f_std)
+            chosen_bool, inliers_bool, f_approx, f_std = get_marking_and_approx_function(self.data, params)
+            fig = get_branch_approx_chart(self.data, params, chosen_bool, inliers_bool, f_approx, f_std)
             fig.show()
         except ValueError:
             msg = QMessageBox()
@@ -438,24 +423,24 @@ class MainWindow(QMainWindow):
     def save_branch_approx(self):
         params = self.pack_all_branch_approx_parameters_in_dict()
         
-        fig_raw_overview = get_overview_chart(self.data_raw, self.boundries_for_overview, point_size=2)
+        fig_raw_overview = get_overview_chart(self.data_raw, self.boundries_for_overview)
         fig_raw_overview.suptitle('Raw data')
 
-        fig_new_overview = get_overview_chart(self.data, self.boundries_for_overview, point_size=2)
+        fig_new_overview = get_overview_chart(self.data, self.boundries_for_overview)
         fig_new_overview.suptitle('Cleaned data')
 
         fig_absmag_1 = get_abs_mag_chart(
             self.data, params['dist'], params['extinction'], params['absorbtion'], 
             kde=False, point_size=2)
 
-        kde = get_kde(self.data, self.dist, extinction, absorbtion)
+        kde = get_kde(self.data, self.dist, params['extinction'], params['absorbtion'])
         fig_absmag_2 = get_abs_mag_chart(
             self.data, params['dist'], params['extinction'], params['absorbtion'], 
             kde=kde, point_size=2)
 
-        chosen_bool, inliers_bool, f_approx, f_std = branch_two_step_analythis_support_functions(self.data, params)
+        chosen_bool, inliers_bool, f_approx, f_std = get_marking_and_approx_function(self.data, params)
         
-        fig_result = calculate_branch_double_chart(self.data, params, chosen_bool, inliers_bool, f_approx, f_std)
+        fig_result = get_branch_approx_chart(self.data, params, chosen_bool, inliers_bool, f_approx, f_std)
         
         d_m = params['d_minus']
         d_p = params['d_plus']
@@ -565,17 +550,17 @@ class MainWindow(QMainWindow):
     def calculate_density_approach(self) -> tuple[FPDF, dict]:
         params = self.pack_all_density_parameters_in_dict()
 
-        fig_raw_overview = get_overview_chart(self.data_raw, self.boundries_for_overview, point_size=2)
+        fig_raw_overview = get_overview_chart(self.data_raw, self.boundries_for_overview)
         fig_raw_overview.suptitle('Raw data')
 
-        fig_new_overview = get_overview_chart(self.data, self.boundries_for_overview, point_size=2)
+        fig_new_overview = get_overview_chart(self.data, self.boundries_for_overview)
         fig_new_overview.suptitle('Cleaned data')
 
         fig_absmag_1 = get_abs_mag_chart(
             self.data, params['dist'], params['extinction'], params['absorbtion'], 
             kde=False, point_size=2)
 
-        kde = get_kde(self.data, self.dist, extinction, absorbtion)
+        kde = get_kde(self.data, self.dist, params['extinction'], params['absorbtion'])
         fig_absmag_2 = get_abs_mag_chart(
             self.data, params['dist'], params['extinction'], params['absorbtion'], 
             kde=kde, point_size=2)
@@ -586,8 +571,7 @@ class MainWindow(QMainWindow):
         fig_zoom_density = get_density_chart(self.data, params, smoothing_bw)
         results, num_of_stars = iterate_over_n_experiments(
             self.data, params, 
-            number_of_mc_experiments, smoothing_bw
-        )
+            number_of_mc_experiments, smoothing_bw)
         
         color_mean = results.mean()
         color_error = ((results - color_mean)**2).mean()**0.5

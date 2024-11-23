@@ -43,7 +43,7 @@ This is what you should see:
 
 4. Enter distance (in MPc or in Mag). Click `Ok`.
 
-5. Enter redshift (V-I) and absorbtion in filter I. Click `Ok` or `Cancel` to reset.
+5. Enter extinction (V-I) and absorbtion in filter I. Click `Ok` or `Cancel` to reset.
 
 6. View the cleaned instrument field and color-magnitude diagram in absolute magnitudes. There will be density histogram over the scatterplot, you can change it to kernel-density plot (kde) if you need. Using kde usually takes some time.
 

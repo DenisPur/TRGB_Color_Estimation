@@ -66,7 +66,7 @@ def plot_histogrm_3x3(
     fig, axes = plt.subplots(3, 3, sharex=True, sharey=True, figsize=[9,9])
 
     data_s = data[['mag_v', 'mag_i', 'err_v', 'err_i']].copy()
-    data_s['color'] = data_s['mag_v'] - data_s['mag_i'] - params['redshift']
+    data_s['color'] = data_s['mag_v'] - data_s['mag_i'] - params['extinction']
     data_s['mag'] = data_s['mag_i'] - params['dist'] - params['absorbtion']
 
     for row in axes:
@@ -86,7 +86,7 @@ def iterate_over_n_experiments(
     ) -> tuple[np.array, float]:
 
     data_s = data[['mag_v', 'mag_i', 'err_v', 'err_i']].copy()
-    data_s['color'] = data_s['mag_v'] - data_s['mag_i'] - params['redshift']
+    data_s['color'] = data_s['mag_v'] - data_s['mag_i'] - params['extinction']
     data_s['mag'] = data_s['mag_i'] - params['dist'] - params['absorbtion']
     
     x_points_num = int((params['vi_right'] - params['vi_left']) * 200)
@@ -121,12 +121,9 @@ def plot_monte_carlo_results(
     ) -> plt.Figure:
     
     def gauss(
-            t: np.array | list[float],
+            t: np.array,
             mean: float, 
-            std:float
-        ) -> np.array:
-        
-        t = np.array(t)
+            std:float) -> np.array:
         y = 1 / (std * np.sqrt(2*np.pi)) * np.exp(- 0.5 * (t - mean)**2 / std**2)
         return y
 

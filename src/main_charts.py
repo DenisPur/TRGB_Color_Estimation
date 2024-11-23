@@ -4,37 +4,32 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib import ticker
 from matplotlib.colors import Normalize
-from scipy.stats import gaussian_kde
-from functools import lru_cache
 
 
 def get_overview_chart(
         data: pd.DataFrame, 
         boundries_for_overview: list[int], 
-        point_size: float=2
-    ) -> plt.Figure:
+        point_size: float=2) -> plt.Figure:
     fig, axs = plt.subplots(1, 2, layout='tight', figsize=[16,9])
     
     color_low, color_high, x_ax_low, x_ax_high, y_ax_low, y_ax_high = boundries_for_overview
-    
     norm=Normalize(vmin=color_low, vmax=color_high, clip=False)
     palette='rainbow'
+    sm = plt.cm.ScalarMappable(cmap=palette, norm=norm)
 
     sns.scatterplot(
         data=data, x='x', y='y', 
         hue='color_vi', palette=palette,
         hue_norm=Normalize(vmin=color_low, vmax=color_high, clip=False),
         alpha=1.0, s=point_size, 
-        ax=axs[0]
-    )
-    sm = plt.cm.ScalarMappable(cmap=palette, norm=norm)
+        ax=axs[0])
     axs[0].figure.colorbar(
         sm, ax=axs[0], 
         location='bottom',
         fraction=0.03,
         pad=0.10,
-        label='V-I $_{[mag]}$'
-    )
+        label='V-I $_{[mag]}$')
+        
     axs[0].set_xlabel('x $_{[px]}$', size = 12)
     axs[0].set_ylabel('y $_{[px]}$', size = 12)
     axs[0].set_xlim((x_ax_low, x_ax_high))
@@ -46,8 +41,8 @@ def get_overview_chart(
     sns.scatterplot(
         data=data, x='color_vi', y='mag_i',
         alpha=0.8, s=point_size, c='xkcd:sea blue',
-        ax=axs[1]
-    )
+        ax=axs[1])
+
     axs[1].set_xlabel('V-I $_{[mag]}$', size = 12)
     axs[1].set_ylabel('$m_I$ $_{[mag]}$', size = 12)
     axs[1].invert_yaxis()
@@ -59,20 +54,18 @@ def get_overview_chart(
 def gat_clearing_chart(
         clean: pd.DataFrame, 
         dirty: pd.DataFrame, 
-        point_size: float=2
-    ) -> plt.Figure:
+        point_size: float=2) -> plt.Figure:
     fig, axs = plt.subplots(1, 2, layout='tight', figsize=[16,9])
 
     sns.scatterplot(
         data=dirty, x='x', y='y', 
         alpha=0.8, s=point_size, c='xkcd:bright red',
-        ax=axs[0]
-    )
+        ax=axs[0])
     sns.scatterplot(
         data=clean, x='x', y='y', 
         alpha=0.8, s=point_size, c='xkcd:teal',
-        ax=axs[0]
-    )
+        ax=axs[0])
+
     axs[0].set_xlabel('x $_{[px]}$', size = 12)
     axs[0].set_ylabel('y $_{[px]}$', size = 12)
     axs[0].grid(linestyle=':')
@@ -81,13 +74,12 @@ def gat_clearing_chart(
     sns.scatterplot(
         data=dirty, x='color_vi', y='mag_i', 
         alpha=0.8, s=point_size, c='xkcd:bright red',
-        ax=axs[1]
-    )
+        ax=axs[1])
     sns.scatterplot(
         data=clean, x='color_vi', y='mag_i', 
         alpha=0.8, s=point_size, c='xkcd:teal',
-        ax=axs[1]
-    )
+        ax=axs[1])
+
     axs[1].set_xlabel('V-I $_{[mag]}$', size = 12)
     axs[1].set_ylabel('$m_I$ $_{[mag]}$', size = 12)
     axs[1].invert_yaxis()
@@ -104,27 +96,24 @@ def get_masking_chart(
         data: pd.DataFrame, 
         mask: pd.DataFrame, 
         borders: list[int], 
-        point_size: float=2
-    ) -> plt.Figure:
-
+        point_size: float=2) -> plt.Figure:
     fig, axs = plt.subplots(1, 2, layout='tight', figsize=[16,9])
+
     sns.scatterplot(
         data=data[~mask], x='x', y='y', 
         alpha=0.8, s=point_size, c='xkcd:light red',
-        ax=axs[0]
-    )
+        ax=axs[0])
     sns.scatterplot(
         data=data[mask], x='x', y='y', 
         alpha=0.8, s=point_size, c='xkcd:sea blue',
-        ax=axs[0]
-    )
+        ax=axs[0])
     
     x_left, x_right, y_bottom, y_top = borders
     axs[0].plot(
         [x_left, x_left, x_right, x_right, x_left], 
         [y_bottom, y_top, y_top, y_bottom, y_bottom], 
-        alpha=0.9, lw=1, ls=':', c='black'
-    )
+        alpha=0.9, lw=1, ls=':', c='black')
+
     axs[0].set_xlabel('x $_{[px]}$', size = 12)
     axs[0].set_ylabel('y $_{[px]}$', size = 12)
     axs[0].grid(linestyle=':')
@@ -133,13 +122,12 @@ def get_masking_chart(
     sns.scatterplot(
         data=data[~mask], x='color_vi', y='mag_i', 
         alpha=0.4, s=point_size, c='xkcd:light red',
-        ax=axs[1]
-    )
+        ax=axs[1])
     sns.scatterplot(
         data=data[mask], x='color_vi', y='mag_i', 
         alpha=0.8, s=point_size, c='xkcd:sea blue',
-        ax=axs[1]
-    )
+        ax=axs[1])
+
     axs[1].set_xlabel('V-I $_{[mag]}$', size = 12)
     axs[1].set_ylabel('$m_I$ $_{[mag]}$', size = 12)
     axs[1].invert_yaxis()
@@ -154,44 +142,31 @@ def get_masking_chart(
 
 def get_cells_chart(
         data: pd.DataFrame, 
-        number_of_cells: int, 
-        point_size: float=2
-    ) -> plt.Figure:
-    
+        cells_number: int, 
+        point_size: float=2) -> plt.Figure:
     fig, ax = plt.subplots(layout='tight', figsize=[10,9])
+    
     sns.scatterplot(
         data=data, x='x', y='y', 
-        alpha=0.8, s=point_size, color='xkcd:sea blue'
-    )
+        alpha=0.8, s=point_size, color='xkcd:sea blue')
     
-    x_grid = np.linspace(
-        start=data['x'].min(), 
-        stop=data['x'].max(), 
-        num=number_of_cells+1
-    )
-    y_grid = np.linspace(
-        start=data['y'].min(), 
-        stop=data['y'].max(), 
-        num=number_of_cells+1
-    )
-    
+    x_grid = np.linspace(start=data['x'].min(), stop=data['x'].max(), num=cells_number+1)
+    y_grid = np.linspace(start=data['y'].min(), stop=data['y'].max(), num=cells_number+1)
     for x in x_grid:
         ax.plot(
             [x, x], [data['y'].min(), data['y'].max()],
-            alpha=0.8, ls=':', lw=1, color='black' 
-        )
+            alpha=0.8, ls=':', lw=1, color='black')
     for y in y_grid:
         ax.plot(
             [data['x'].min(), data['x'].max()], [y, y],
-            alpha=0.8, ls=':', lw=1, color='black'
-        )
+            alpha=0.8, ls=':', lw=1, color='black')
     
     sns.histplot(
         data=data, x='x', y='y', 
         bins=[x_grid, y_grid], 
         alpha=0.4, cmap='cubehelix_r', 
-        stat='count', cbar=True
-    )
+        stat='count', cbar=True)
+
     ax.set_xlabel('x $_{[px]}$', size = 12)
     ax.set_ylabel('y $_{[px]}$', size = 12)
     ax.grid(linestyle=':')
@@ -201,44 +176,31 @@ def get_cells_chart(
 
 def get_masked_cells_chart(
         data: pd.DataFrame, 
-        number_of_cells: int, 
+        cells_number: int, 
         bool_mask: pd.Series, 
-        point_size: float=2
-    ) -> plt.Figure:
-
+        point_size: float=2) -> plt.Figure:
     fig, axs = plt.subplots(1, 2, layout='tight', figsize=[16,9])
+
     sns.scatterplot(
         data=data[bool_mask], x='x', y='y', 
         alpha=0.8, s=point_size, color='xkcd:sea blue',
-        ax=axs[0],
-    )
+        ax=axs[0])
     sns.scatterplot(
         data=data[~ bool_mask], x='x', y='y', 
         alpha=0.8, s=point_size, color='xkcd:light red',
-        ax=axs[0]
-    )
+        ax=axs[0])
 
-    x_grid = np.linspace(
-        start=data['x'].min(), 
-        stop=data['x'].max(), 
-        num=number_of_cells+1
-    )
-    y_grid = np.linspace(
-        start=data['y'].min(), 
-        stop=data['y'].max(), 
-        num=number_of_cells+1
-    )
-    
+    x_grid = np.linspace(start=data['x'].min(), stop=data['x'].max(), num=cells_number+1)
+    y_grid = np.linspace(start=data['y'].min(), stop=data['y'].max(), num=cells_number+1)
     for x in x_grid:
         axs[0].plot(
             [x, x], [data['y'].min(), data['y'].max()],
-            alpha=0.8, ls=':', lw=1, color='black' 
-        )
+            alpha=0.8, ls=':', lw=1, color='black')
     for y in y_grid:
         axs[0].plot(
             [data['x'].min(), data['x'].max()], [y, y],
-            alpha=0.8, ls=':', lw=1, color='black'
-        )
+            alpha=0.8, ls=':', lw=1, color='black')
+    
     axs[0].set_xlabel('x $_{[px]}$', size = 12)
     axs[0].set_ylabel('y $_{[px]}$', size = 12)
     axs[0].grid(linestyle=':')
@@ -247,13 +209,12 @@ def get_masked_cells_chart(
     sns.scatterplot(
         data=data[~ bool_mask], x='color_vi', y='mag_i', 
         alpha=0.4, s=point_size, c='xkcd:light red',
-        ax=axs[1]
-    )
+        ax=axs[1])
     sns.scatterplot(
         data=data[bool_mask], x='color_vi', y='mag_i', 
         alpha=0.8, s=point_size, c='xkcd:sea blue',
-        ax=axs[1]
-    )
+        ax=axs[1])
+
     axs[1].set_xlabel('V-I $_{[mag]}$', size = 12)
     axs[1].set_ylabel('$m_I$ $_{[mag]}$', size = 12)
     axs[1].invert_yaxis()
@@ -266,87 +227,39 @@ def get_masked_cells_chart(
     return fig
 
 
-def get_kde(
-        data: pd.DataFrame, 
-        dist: float, 
-        redshift: float, 
-        absorbtion: float
-    ) -> tuple[np.array, np.array, np.array]:
-
-    x_raw = data['color_vi'].to_numpy(dtype=np.float32)
-    y_raw = data['mag_i'].to_numpy(dtype=np.float32)
-    x_grid, y_grid, z_grid = get_kde_computation_part(tuple(x_raw), tuple(y_raw))
-    
-    x_grid = x_grid - redshift
-    y_grid = y_grid - dist - absorbtion
-    return (x_grid, y_grid, z_grid)
-
-
-@lru_cache(maxsize=16, typed=False)
-def get_kde_computation_part(
-        x: tuple[int, ...], 
-        y: tuple[int, ...]
-    ) -> tuple[np.array, np.array, np.array]:
-
-    x = np.array(x)
-    y = np.array(y)
-    xy = np.vstack([x, y])
-
-    x_grid = np.linspace(min(x), max(x), num=150)
-    y_grid = np.linspace(min(y), max(y), num=250)
-    x_grid, y_grid = np.meshgrid(x_grid, y_grid)
-
-    kde = gaussian_kde(xy, bw_method=0.1)
-    z_grid = kde(np.vstack([x_grid.ravel(), y_grid.ravel()])).reshape(x_grid.shape) * len(x)
-    return (x_grid, y_grid, z_grid)
-
-
 def get_abs_mag_chart(
         data: pd.DataFrame, 
         dist: float, 
-        redshift: float, 
+        extinction: float, 
         absorbtion: float, 
         kde: None | tuple[np.array, np.array, np.array]=None, 
-        point_size: float=2
-    ) -> plt.Figure:
+        point_size: float=2) -> plt.Figure:
+    fig, ax = plt.subplots(layout='tight', figsize=[9,9] if kde else [10,9])
     
-    if kde:
-        fig, ax = plt.subplots(layout='tight', figsize=[9,9])
-    else:
-        fig, ax = plt.subplots(layout='tight', figsize=[10,9])
-    
-    data['color_vi_real'] = data['color_vi'] - redshift
+    data['color_vi_real'] = data['color_vi'] - extinction
     data['mag_i_real'] = data['mag_i'] - dist - absorbtion
+
+    sns.scatterplot(
+        data=data, x='color_vi_real', y='mag_i_real', 
+        alpha=0.9, s=point_size, color='xkcd:blue grey')
 
     if kde:
         x_grid, y_grid, z_grid = kde
         z_max = np.max(z_grid)
         levels = [100 * 2**i for i in range(int(np.log(z_max / 100)/np.log(2)) + 1)]
 
-        sns.scatterplot(
-            data=data, x='color_vi_real', y='mag_i_real', 
-            alpha=0.9, s=point_size, color='xkcd:blue grey'
-        )
         contour = plt.contour(
             x_grid, y_grid, z_grid, 
             cmap="plasma_r", alpha=0.8, 
-            levels=levels,
-            norm='log'
-        )
+            levels=levels, norm='log')
     else:
-        sns.scatterplot(
-            data=data, x='color_vi_real', y='mag_i_real', 
-            alpha=0.9, s=point_size, color='xkcd:blue grey'
-        )
         sns.histplot(
             data=data, x='color_vi_real', y='mag_i_real', 
-            alpha=0.4, cmap='cubehelix_r', cbar=True
-        )
+            alpha=0.4, cmap='cubehelix_r', cbar=True)
 
     ax.axhline(
         y=-4.0, xmin=data['color_vi_real'].min(), xmax=data['color_vi_real'].max(), 
-        alpha=0.9, linestyle='--', color='xkcd:red'
-    )
+        alpha=0.9, linestyle='--', color='xkcd:red')
 
     ax.set_xlabel('V-I (real) $_{[mag]}$', size = 12)
     ax.set_ylabel('$M_I$ $_{[mag]}$', size = 12)
