@@ -18,12 +18,12 @@ from src.infra import (
     read_file, check_available_columns, mask_based_on_cells_density, 
     create_pdf_out_of_figures, get_kde)
 from src.main_charts import ( 
-    get_overview_chart, gat_clearing_chart, get_masking_chart, get_cells_chart,
-    get_masked_cells_chart, get_abs_mag_chart)
+    overview_cmd_field_chart, clearing_chart, rectangular_masking_chart, 
+    cells_hist_chart, cells_masking_chart, abs_mag_cmd_chart)
 from src.branch_approximation import (
-    get_marking_and_approx_function, get_branch_approx_chart)
+    marking_and_approximating, branch_approximation_graph)
 from src.denisty_approximation import (
-    get_density_chart, density_choosing_region)
+    slice_density_graph, choosing_low_density_regions)
 from src.monte_carlo import (
     plot_histogrm_3x3, iterate_over_n_experiments, plot_monte_carlo_results)
 
@@ -37,7 +37,6 @@ class MainWindow(QMainWindow):
         # UI set up
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-
         self.ui.main_tabs.setTabEnabled(1, False)
         self.ui.main_tabs.setTabEnabled(2, False)
 
@@ -47,20 +46,16 @@ class MainWindow(QMainWindow):
 
         self.ui.button_clearing.clicked.connect(self.open_clearing_dialog)
         self.ui.button_view_clearing.clicked.connect(self.view_clearing_result)
-
         self.ui.button_masking.clicked.connect(self.open_masking_dialog)
         self.ui.button_view_masking.clicked.connect(self.view_masking_result)
-
         self.ui.button_view_cmd_field.clicked.connect(self.view_cmd_field)
         self.ui.button_export_csv.clicked.connect(self.export_cmd)
 
         self.ui.enter_mpcs.valueChanged.connect(self.mpcs_changed)
         self.ui.enter_mags.valueChanged.connect(self.mags_changed)
-
         self.ui.enter_coef_1.valueChanged.connect(self.recalculate_reddening_labels)
         self.ui.enter_coef_2.valueChanged.connect(self.recalculate_reddening_labels)
         self.ui.enter_b_minus_v.valueChanged.connect(self.recalculate_reddening_labels)
-
         self.ui.button_view_abs_cmd.clicked.connect(self.view_chart_manager)
 
         # second tab
@@ -102,17 +97,14 @@ class MainWindow(QMainWindow):
     def load_file(self, filename):
         self.data = read_file(filename)
         self.data_raw = self.data.copy()
-        
         self.ui.label_filename.setText(filename)
 
         self.ui.group_clearing.setEnabled(True)
         self.ui.group_masking.setEnabled(True)
         self.ui.group_view_export_changes.setEnabled(True)
-
         self.ui.group_distance.setEnabled(True)
         self.ui.group_reddening.setEnabled(True)
         self.ui.group_view_cmd_abs.setEnabled(True)
-
         self.ui.button_reload.setEnabled(True)
 
         self.ui.button_view_clearing.setEnabled(False)
@@ -138,7 +130,7 @@ class MainWindow(QMainWindow):
     ##########################################################################
 
     def view_cmd_field(self):
-        fig_raw = get_overview_chart(self.data, self.boundries_for_overview)
+        fig_raw = overview_cmd_field_chart(self.data, self.boundries_for_overview)
         fig_raw.show()
 
     def export_cmd(self):
@@ -169,45 +161,39 @@ class MainWindow(QMainWindow):
         window.ui.check_crowd.setEnabled(columns_availability['crowd'])
 
         def mark_clean_rows() -> pd.Series:
-            marking = (self.data['mag_v'] == self.data['mag_v'])
+            marking = (self.data['mag_v'] == self.data['mag_v']) # bruh
 
             if window.ui.check_type.isChecked():
-                marking *= (
-                    self.data['type'] <= window.ui.enter_type.value())
+                marking *= (self.data['type'] <= window.ui.enter_type.value())
             if window.ui.check_mag.isChecked():
-                marking *= (
-                    (self.data['mag_v'] < window.ui.enter_mag.value()) 
-                    & (self.data['mag_i'] < window.ui.enter_mag.value()))
+                marking *= ((self.data['mag_v'] < window.ui.enter_mag.value()) 
+                            & (self.data['mag_i'] < window.ui.enter_mag.value()))
             if window.ui.check_snr.isChecked():
-                marking *= (
-                    (self.data['snr_v'] >= window.ui.enter_snr.value())
-                    & (self.data['snr_i'] >= window.ui.enter_snr.value()))
+                marking *= ((self.data['snr_v'] >= window.ui.enter_snr.value())
+                            & (self.data['snr_i'] >= window.ui.enter_snr.value()))
             if window.ui.check_sharp.isChecked():
-                marking *= (
-                    (self.data['sharp_v'] + self.data['sharp_i'])**2 
-                    <= window.ui.enter_sharp.value())
+                marking *= ((self.data['sharp_v'] + self.data['sharp_i'])**2 
+                            <= window.ui.enter_sharp.value())
             if window.ui.check_flag.isChecked():
-                marking *= (
-                    (self.data['flag_v'] <= window.ui.enter_flag.value())
-                    & (self.data['flag_i'] <= window.ui.enter_flag.value()))
+                marking *= ((self.data['flag_v'] <= window.ui.enter_flag.value())
+                            & (self.data['flag_i'] <= window.ui.enter_flag.value()))
             if window.ui.check_crowd.isChecked():
-                marking *= (
-                    (self.data['crowd_v'] + self.data['crowd_i']) 
-                    <= window.ui.enter_crowd.value())
+                marking *= ((self.data['crowd_v'] + self.data['crowd_i']) 
+                            <= window.ui.enter_crowd.value())
             return marking
 
         def preview():
             marking = mark_clean_rows()
             clean_data = self.data[marking]
             dirty_data = self.data[~marking]
-            fig = gat_clearing_chart(clean=clean_data, dirty=dirty_data)
+            fig = clearing_chart(clean=clean_data, dirty=dirty_data)
             fig.show()
 
         def saving():
             marking = mark_clean_rows()
             clean_data = self.data[marking]
             dirty_data = self.data[~marking]
-            self.fig_clear = gat_clearing_chart(clean=clean_data, dirty=dirty_data)
+            self.fig_clear = clearing_chart(clean=clean_data, dirty=dirty_data)
             self.data = self.data[marking]
             self.ui.button_view_clearing.setEnabled(True)
             self.ui.group_masking.setEnabled(True)
@@ -243,7 +229,7 @@ class MainWindow(QMainWindow):
         window.ui.enter_y_bottom.setValue(y_min)
         window.ui.enter_y_top.setValue(y_max)
 
-        def apply_rect_mask() -> tuple[list[float], pd.Series]:
+        def apply_rectangular_mask() -> tuple[list[float], pd.Series]:
             x_left = window.ui.enter_x_left.value()
             x_right = window.ui.enter_x_right.value()
             x_left, x_right = sorted([x_left, x_right])
@@ -262,42 +248,40 @@ class MainWindow(QMainWindow):
                 masking = ~ masking
             return borders, masking
 
-        def preview_rect():
-            borders, masking = apply_rect_mask()
-            fig = get_masking_chart(self.data, masking, borders)
+        def view_chosen_rectangle():
+            borders, masking = apply_rectangular_mask()
+            fig = rectangular_masking_chart(self.data, masking, borders)
             fig.show()
 
         def preview_cells():
             number_of_cells = window.ui.enter_number_of_cells.value()
-            fig = get_cells_chart(self.data, number_of_cells)
+            fig = cells_hist_chart(self.data, number_of_cells)
             fig.show()
 
-        def preview_dens():
+        def view_chosen_cells():
             number_of_cells = window.ui.enter_number_of_cells.value()
             threshold = window.ui.enter_threshold.value() / 100
             take_external = window.ui.check_inverse_dens_select.checkState() == 2
             mask = mask_based_on_cells_density(self.data, number_of_cells, threshold)
             if take_external:
                 mask = ~ mask
-            fig = get_masked_cells_chart(self.data, number_of_cells, mask)
+            fig = cells_masking_chart(self.data, number_of_cells, mask)
             fig.show()
 
         def saving():
             self.mask_used = True
             if window.ui.tabWidget.currentIndex() == 0:
-                borders, mask = apply_rect_mask()
-                self.fig_mask = get_masking_chart(self.data, mask, borders)
-            elif window.ui.tabWidget.currentIndex() == 1:
+                borders, mask = apply_rectangular_mask()
+                self.fig_mask = rectangular_masking_chart(self.data, mask, borders)
+            else:
                 number_of_cells = window.ui.enter_number_of_cells.value()
                 threshold = window.ui.enter_threshold.value() / 100
                 take_external = window.ui.check_inverse_dens_select.checkState() == 2
                 mask = mask_based_on_cells_density(self.data, number_of_cells, threshold) 
                 if take_external:
                     mask = ~ mask
-                self.fig_mask = get_masked_cells_chart(self.data, number_of_cells, mask)
-            else:
-                print(window.ui.tabWidget.currentIndex())
-                raise ValueError
+                self.fig_mask = cells_masking_chart(self.data, number_of_cells, mask)
+
             self.data = self.data[mask]
             self.ui.button_view_masking.setEnabled(True)
             self.ui.group_distance.setEnabled(True)
@@ -305,9 +289,9 @@ class MainWindow(QMainWindow):
         window.ui.slider_threshold.valueChanged.connect(window.ui.enter_threshold.setValue)
         window.ui.enter_threshold.valueChanged.connect(window.ui.slider_threshold.setValue)
 
-        window.ui.button_preview_rect.clicked.connect(preview_rect)
+        window.ui.button_preview_rect.clicked.connect(view_chosen_rectangle)
         window.ui.button_preview_cells.clicked.connect(preview_cells)
-        window.ui.button_preview_dens.clicked.connect(preview_dens)
+        window.ui.button_preview_dens.clicked.connect(view_chosen_cells)
 
         window.ui.buttonBox.accepted.connect(saving)
         # window.ui.buttonBox.rejected.connect()
@@ -351,11 +335,9 @@ class MainWindow(QMainWindow):
         if (self.ui.tabs_reddening.currentIndex() == 0):
             extinction = self.ui.enter_b_minus_v.value() * self.ui.enter_coef_1.value()
             absorbtion = self.ui.enter_b_minus_v.value() * self.ui.enter_coef_2.value()
-        elif (self.ui.tabs_reddening.currentIndex() == 1):
+        else:
             extinction = self.ui.enter_extinction.value()
             absorbtion = self.ui.enter_absorbtion.value()
-        else:
-            raise ValueError
         return extinction, absorbtion
     
     ##########################################################################
@@ -365,24 +347,26 @@ class MainWindow(QMainWindow):
         extinction, absorbtion = self.get_extinction_absorbtion()
         if add_kde:
             self.thread = CalculateKDE(self.data, self.dist, extinction, absorbtion)
-            self.thread.started.connect(self.show_final_chart_processing)
-            self.thread.finished.connect(self.show_final_chart_done)
-            self.thread.result_signal.connect(self.view_filnal_chart)
+            self.thread.started.connect(self.show_abs_cmd_chart_processing)
+            self.thread.finished.connect(self.show_abs_cmd_chart_done)
+            self.thread.result_signal.connect(self.view_abs_cmd_chart)
             self.thread.start()
         else: 
-            self.view_filnal_chart(kde=None)
+            self.view_abs_cmd_chart(kde=None)
 
-    def view_filnal_chart(self, kde):
+    def view_abs_cmd_chart(self, kde):
         extinction, absorbtion = self.get_extinction_absorbtion()
-        fig = get_abs_mag_chart(self.data, self.dist, extinction, absorbtion, kde=kde)
+        self.data['abs_color_vi'] = self.data['color_vi'] - extinction
+        self.data['abs_mag_i'] = self.data['mag_i'] - self.dist - absorbtion
+        fig = abs_mag_cmd_chart(self.data, kde=kde)
         fig.show()       
 
-    def show_final_chart_processing(self):
+    def show_abs_cmd_chart_processing(self):
         self.ui.button_view_abs_cmd.setText("Processing ⏱")
         self.ui.check_add_kde.setEnabled(False)
         self.ui.button_view_abs_cmd.setEnabled(False)
 
-    def show_final_chart_done(self):
+    def show_abs_cmd_chart_done(self):
         self.ui.button_view_abs_cmd.setText('View in absolute magnitudes')
         self.ui.check_add_kde.setEnabled(True)
         self.ui.button_view_abs_cmd.setEnabled(True)
@@ -409,8 +393,8 @@ class MainWindow(QMainWindow):
     def view_branch(self):
         params = self.pack_all_branch_approx_parameters_in_dict()
         try:
-            chosen_bool, inliers_bool, f_approx, f_std = get_marking_and_approx_function(self.data, params)
-            fig = get_branch_approx_chart(self.data, params, chosen_bool, inliers_bool, f_approx, f_std)
+            chosen_bool, inliers_bool, f_approx, f_std = marking_and_approximating(self.data, params)
+            fig = branch_approximation_graph(self.data, params, chosen_bool, inliers_bool, f_approx, f_std)
             fig.show()
         except ValueError:
             msg = QMessageBox()
@@ -423,33 +407,26 @@ class MainWindow(QMainWindow):
     def save_branch_approx(self):
         params = self.pack_all_branch_approx_parameters_in_dict()
         
-        fig_raw_overview = get_overview_chart(self.data_raw, self.boundries_for_overview)
+        fig_raw_overview = overview_cmd_field_chart(self.data_raw, self.boundries_for_overview)
         fig_raw_overview.suptitle('Raw data')
-
-        fig_new_overview = get_overview_chart(self.data, self.boundries_for_overview)
+        fig_new_overview = overview_cmd_field_chart(self.data, self.boundries_for_overview)
         fig_new_overview.suptitle('Cleaned data')
 
-        fig_absmag_1 = get_abs_mag_chart(
-            self.data, params['dist'], params['extinction'], params['absorbtion'], 
-            kde=False, point_size=2)
-
+        self.data['abs_color_vi'] = self.data['color_vi'] - params['extinction']
+        self.data['abs_mag_i'] = self.data['mag_i'] - self.dist - params['absorbtion']
+        fig_absmag_1 = abs_mag_cmd_chart(self.data, kde=False)
         kde = get_kde(self.data, self.dist, params['extinction'], params['absorbtion'])
-        fig_absmag_2 = get_abs_mag_chart(
-            self.data, params['dist'], params['extinction'], params['absorbtion'], 
-            kde=kde, point_size=2)
+        fig_absmag_2 = abs_mag_cmd_chart(self.data, kde=kde)
 
-        chosen_bool, inliers_bool, f_approx, f_std = get_marking_and_approx_function(self.data, params)
-        
-        fig_result = get_branch_approx_chart(self.data, params, chosen_bool, inliers_bool, f_approx, f_std)
+        chosen_bool, inliers_bool, f_approx, f_std = marking_and_approximating(self.data, params)
+        fig_result = branch_approximation_graph(self.data, params, chosen_bool, inliers_bool, f_approx, f_std)
         
         d_m = params['d_minus']
         d_p = params['d_plus']
         i_mag = params['i_level']
-
         estimate = f_approx(i_mag)
         estimate_high = f_approx(i_mag+d_p) - f_std(i_mag+d_p)
         estimate_low = f_approx(i_mag-d_m) + f_std(i_mag-d_m)
-
         data = {
             'method' : 'approximation of a branch by a parabola',
             'filename' : self.file_path,
@@ -501,7 +478,7 @@ class MainWindow(QMainWindow):
             'vi_right':self.ui.enter_vi_right_2.value(),
             's_scaler':self.ui.enter_s.value(),
         }
-        chosen_bool, i_level_low, i_level_high, mean_i_error, mean_color_error = density_choosing_region(self.data, params)
+        chosen_bool, i_level_low, i_level_high, mean_i_error, mean_color_error = choosing_low_density_regions(self.data, params)
         params['chosen_bool'] = chosen_bool
         params['i_level_low'] = i_level_low
         params['i_level_high'] = i_level_high
@@ -512,7 +489,7 @@ class MainWindow(QMainWindow):
     def view_density(self):
         params = self.pack_all_density_parameters_in_dict()
         try:
-            fig = get_density_chart(self.data, params, smoothing_bw=0.1)
+            fig = slice_density_graph(self.data, params, smoothing_bw=0.1)
             fig.show()
         except ValueError:
             msg = QMessageBox()
@@ -550,25 +527,22 @@ class MainWindow(QMainWindow):
     def calculate_density_approach(self) -> tuple[FPDF, dict]:
         params = self.pack_all_density_parameters_in_dict()
 
-        fig_raw_overview = get_overview_chart(self.data_raw, self.boundries_for_overview)
+        fig_raw_overview = overview_cmd_field_chart(self.data_raw, self.boundries_for_overview)
         fig_raw_overview.suptitle('Raw data')
 
-        fig_new_overview = get_overview_chart(self.data, self.boundries_for_overview)
+        fig_new_overview = overview_cmd_field_chart(self.data, self.boundries_for_overview)
         fig_new_overview.suptitle('Cleaned data')
 
-        fig_absmag_1 = get_abs_mag_chart(
-            self.data, params['dist'], params['extinction'], params['absorbtion'], 
-            kde=False, point_size=2)
-
+        self.data['abs_color_vi'] = self.data['color_vi'] - params['extinction']
+        self.data['abs_mag_i'] = self.data['mag_i'] - self.dist - params['absorbtion']
+        fig_absmag_1 = abs_mag_cmd_chart(self.data, kde=False)
         kde = get_kde(self.data, self.dist, params['extinction'], params['absorbtion'])
-        fig_absmag_2 = get_abs_mag_chart(
-            self.data, params['dist'], params['extinction'], params['absorbtion'], 
-            kde=kde, point_size=2)
+        fig_absmag_2 = abs_mag_cmd_chart(self.data, kde=kde)
     
         number_of_mc_experiments = self.ui.enter_n_exp.value()
         smoothing_bw = self.ui.enter_eps.value()
 
-        fig_zoom_density = get_density_chart(self.data, params, smoothing_bw)
+        fig_zoom_density = slice_density_graph(self.data, params, smoothing_bw)
         results, num_of_stars = iterate_over_n_experiments(
             self.data, params, 
             number_of_mc_experiments, smoothing_bw)

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 
 
-def density_choosing_region(
+def choosing_low_density_regions(
         data: pd.DataFrame, 
         params: dict) -> tuple[pd.Series, float, float, float, float]:
     data['color_vi_real'] = data['color_vi'] - params['extinction']
@@ -31,7 +31,7 @@ def density_choosing_region(
     return chosen_bool, i_level_low, i_level_high, mean_i_error, mean_color_error
 
 
-def get_density_chart(
+def slice_density_graph(
         data: pd.DataFrame, 
         params: dict, 
         smoothing_bw: float) -> plt.Figure:

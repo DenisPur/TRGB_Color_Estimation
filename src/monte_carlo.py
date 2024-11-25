@@ -4,7 +4,7 @@ from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from src.denisty_approximation import density_choosing_region
+from src.denisty_approximation import choosing_low_density_regions
 
 
 def randomly_stir_data(

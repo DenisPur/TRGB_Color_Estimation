@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 
-def get_marking_and_approx_function(
+def marking_and_approximating(
         data: pd.DataFrame, 
         params: dict) -> tuple[pd.Series, pd.Series, callable, callable]:
     data['color_vi_real'] = data['color_vi'] - params['extinction']
@@ -59,7 +59,7 @@ def get_marking_and_approx_function(
     return chosen_bool, inliers_bool, f_approx, f_std
 
 
-def get_branch_approx_chart(
+def branch_approximation_graph(
         data: pd.DataFrame, 
         params: dict, 
         chosen_bool: pd.Series, 
