@@ -47,7 +47,7 @@ def scatter_negative_accent_2(
         x: str, y:str):
     sns.scatterplot(
         data=data, x=x, y=y, 
-        alpha=0.3, s=2, c='xkcd:red',
+        alpha=0.4, s=2, c='xkcd:light red',
         ax=ax)
 
 

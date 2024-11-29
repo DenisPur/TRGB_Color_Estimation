@@ -177,20 +177,15 @@ class MainWindow(QMainWindow):
         window = QDialog(parent=self)
         window.ui = Ui_Clearing_Dialog()
         window.ui.setupUi(window)
-
+        
         columns_availability = check_available_columns(self.data)
-        window.ui.check_type.setChecked(columns_availability['type'])
-        window.ui.check_type.setEnabled(columns_availability['type'])
-        window.ui.check_mag.setChecked(columns_availability['mag'])
-        window.ui.check_mag.setEnabled(columns_availability['mag'])
-        window.ui.check_snr.setChecked(columns_availability['snr'])
-        window.ui.check_snr.setEnabled(columns_availability['snr'])
-        window.ui.check_sharp.setChecked(columns_availability['sharp'])
-        window.ui.check_sharp.setEnabled(columns_availability['sharp'])
-        window.ui.check_flag.setChecked(columns_availability['flag'])
-        window.ui.check_flag.setEnabled(columns_availability['flag'])
-        window.ui.check_crowd.setChecked(columns_availability['crowd'])
-        window.ui.check_crowd.setEnabled(columns_availability['crowd'])
+        checkers_list = [
+            window.ui.check_type, window.ui.check_mag, window.ui.check_snr,
+            window.ui.check_sharp, window.ui.check_flag, window.ui.check_crowd]
+        column_names = ['type', 'mag', 'snr', 'sharp', 'flag', 'crowd']
+        for checker, column in zip(checkers_list, column_names):
+            checker.setChecked(columns_availability[column])
+            checker.setEnabled(columns_availability[column])
 
         def mark_clean_rows() -> pd.Series:
             marking = (self.data['mag_v'] == self.data['mag_v']) # bruh
@@ -244,10 +239,8 @@ class MainWindow(QMainWindow):
         window.ui = Ui_Masking_Dialog()
         window.ui.setupUi(window)
 
-        x_min = self.data['x'].min()
-        x_max = self.data['x'].max()
-        y_min = self.data['y'].min()
-        y_max = self.data['y'].max()
+        x_min, x_max = self.data['x'].min(), self.data['x'].max()
+        y_min, y_max = self.data['y'].min(), self.data['y'].max()
 
         window.ui.enter_x_left.setRange(x_min, x_max)
         window.ui.enter_x_right.setRange(x_min, x_max)
@@ -411,8 +404,7 @@ class MainWindow(QMainWindow):
             'i_right':self.ui.enter_i_right.value(), 
             'p_chosen':self.ui.enter_p.value(),
             'd_minus':self.ui.enter_d_minus.value(), 
-            'd_plus':self.ui.enter_d_plus.value()
-        }
+            'd_plus':self.ui.enter_d_plus.value()}
         return params
 
     def view_branch(self):
@@ -452,7 +444,7 @@ class MainWindow(QMainWindow):
         estimate = f_approx(i_mag)
         estimate_high = f_approx(i_mag+d_p) - f_std(i_mag+d_p)
         estimate_low = f_approx(i_mag-d_m) + f_std(i_mag-d_m)
-        data = {
+        output_data = {
             'method' : 'approximation of a branch by a parabola',
             'filename' : self.file_path,
             'I mag level' : params['i_level'],
@@ -475,7 +467,7 @@ class MainWindow(QMainWindow):
             }
         }
 
-        self.save_json(data)
+        self.save_json(output_data)
 
         figures = [fig_raw_overview, fig_new_overview, fig_absmag_1, fig_absmag_2, fig_result]
         pdf = create_pdf_out_of_figures(figures)
@@ -487,7 +479,6 @@ class MainWindow(QMainWindow):
 
     def pack_all_density_parameters_in_dict(self):
         extinction, absorbtion = self.get_extinction_absorbtion()
-        chosen_bool, i_level_low, i_level_high, mean_i_error, mean_color_error = choosing_low_density_regions(self.data, params)
         params = {
             'dist':self.dist, 
             'extinction':extinction,
@@ -497,13 +488,15 @@ class MainWindow(QMainWindow):
             'd_plus':self.ui.enter_d_plus_2.value(),
             'vi_left':self.ui.enter_vi_left_2.value(),
             'vi_right':self.ui.enter_vi_right_2.value(),
-            's_scaler':self.ui.enter_s.value(),
+            's_scaler':self.ui.enter_s.value()}
+        chosen_bool, i_level_low, i_level_high, mean_i_error, mean_color_error = choosing_low_density_regions(self.data, params)
+        params = {
+            **params,
             'chosen_bool': chosen_bool,
             'i_level_low': i_level_low,
             'i_level_high': i_level_high,
             'mean_i_error': mean_i_error,
-            'mean_color_error': mean_color_error,
-        }
+            'mean_color_error': mean_color_error}
         return params
 
     def view_density(self):
@@ -565,10 +558,9 @@ class MainWindow(QMainWindow):
         color_error = ((results - color_mean)**2).mean()**0.5
 
         fig_mc_visualsation = plot_histogrm_3x3(self.data, params, smoothing_bw)
-
         fig_result = plot_monte_carlo_results(results, color_mean, color_error, number_of_mc_experiments)
 
-        data = {
+        output_data = {
             'method' : 'finding the maximum density',
             'filename' : self.file_path,
             'I mag level' : params['i_level'],
@@ -600,7 +592,7 @@ class MainWindow(QMainWindow):
         for fig in figures:
             plt.close(fig)
 
-        return pdf, data
+        return pdf, output_data
 
 
 class CalculateAndSaveDensity(QThread):
@@ -619,10 +611,8 @@ class CalculateKDE(QThread):
     result_signal = pyqtSignal(tuple)
 
     def __init__(self, 
-                 data: dict, 
-                 dist:float, 
-                 extinction: float, 
-                 absorbtion: float):
+            data: dict, dist:float, 
+            extinction: float, absorbtion: float):
         super(CalculateKDE, self).__init__()
         self.data = data
         self.dist = dist 
