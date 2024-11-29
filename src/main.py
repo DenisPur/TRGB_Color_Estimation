@@ -2,16 +2,17 @@ import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from fpdf import FPDF
 import json
+from pathlib import Path
+from fpdf import FPDF
 
 from PyQt5.QtCore import QThread, pyqtSignal, QLocale
 
 from PyQt5.QtWidgets import (
-    QMainWindow, QApplication, QWidget, QDialog, QFileDialog, QMessageBox)
+    QMainWindow, QWidget, QDialog, QFileDialog, QMessageBox)
 
 from src.main_window_ui import Ui_MainWindow
-from src.clearing_ui import Ui_Clearing_Dialog
+from src.clearing_ui import Ui_Dialog as Ui_Clearing_Dialog
 from src.masking_ui import Ui_Dialog as Ui_Masking_Dialog
 
 from src.infra import (
@@ -37,8 +38,8 @@ class MainWindow(QMainWindow):
         # UI set up
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.ui.main_tabs.setTabEnabled(1, False)
         self.ui.main_tabs.setTabEnabled(2, False)
+        self.ui.main_tabs.setTabEnabled(1, False)
 
         # first tab
         self.ui.button_chose_file.clicked.connect(self.open_file)
@@ -70,19 +71,52 @@ class MainWindow(QMainWindow):
         self.mask_used = False
         self.dist = 0
         self.dist_in_mpcs = 0
+        self.input_folder = None
+        self.output_folder = None
 
-        # pyqt5 bug
+        # pyqt5 bug fix
         self.ui.group_view_export_changes.setEnabled(False)
         self.ui.group_view_cmd_abs.setEnabled(False)
 
-    ##########################################################################
+
+    def set_input_folder(self, folder: str):
+        self.input_folder = folder
+
+    def set_output_folder(self, folder: str):
+        self.output_folder = folder
+
+    def save_json(self, data: dict):
+        if self.output_folder is not None:
+            filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON', self.output_folder + '/' + self.filename + '.json')
+        else:
+            filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON')
+
+        if filename != '':
+            with open(filename, "w") as out_file:
+                json.dump(data, out_file, indent=4)
+
+    def save_pdf(self, pdf: FPDF):
+        if self.output_folder is not None:
+            filename, _ = QFileDialog.getSaveFileName(self, 'Save PDF', self.output_folder + '/' + self.filename + '.pdf')
+        else:
+            filename, _ = QFileDialog.getSaveFileName(self, 'Save PDF')
+    
+        if filename != '':
+            pdf.output(filename)
+
 
     def open_file(self):
         widget = QWidget(parent=self)
-        self.file_path, _ = QFileDialog.getOpenFileName(widget, 'Open File')
+
+        if self.input_folder is not None:
+            self.file_path, _ = QFileDialog.getOpenFileName(widget, 'Open File', self.input_folder)
+        else:
+            self.file_path, _ = QFileDialog.getOpenFileName(widget, 'Open File')
+        
         if self.file_path:
             try:
                 self.load_file(self.file_path)
+                self.filename = self.file_path.split('/')[-1].removesuffix('.csv')
             except pd.errors.ParserError:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Critical)
@@ -127,7 +161,6 @@ class MainWindow(QMainWindow):
         y_ax_high = self.data['y'].values.max() + 0.05
         return [color_low, color_high, x_ax_low, x_ax_high, y_ax_low, y_ax_high]
 
-    ##########################################################################
 
     def view_cmd_field(self):
         fig_raw = overview_cmd_field_chart(self.data, self.boundries_for_overview)
@@ -139,7 +172,6 @@ class MainWindow(QMainWindow):
             with open(filename, "w") as out_file:
                 self.data.to_csv(filename, index=None)
 
-    ##########################################################################
 
     def open_clearing_dialog(self):
         window = QDialog(parent=self)
@@ -201,13 +233,11 @@ class MainWindow(QMainWindow):
 
         window.ui.button_preview.clicked.connect(preview)
         window.ui.buttonBox.accepted.connect(saving)
-        # window.ui.buttonBox.rejected.connect()
         window.show()
 
     def view_clearing_result(self):
         self.fig_clear.show()
 
-    ##########################################################################
 
     def open_masking_dialog(self):
         window = QDialog(parent=self)
@@ -294,13 +324,11 @@ class MainWindow(QMainWindow):
         window.ui.button_preview_dens.clicked.connect(view_chosen_cells)
 
         window.ui.buttonBox.accepted.connect(saving)
-        # window.ui.buttonBox.rejected.connect()
         window.show()
 
     def view_masking_result(self):
         self.fig_mask.show()
 
-    ##########################################################################
 
     def mpcs_changed(self, value: float):
         if (value > 0):
@@ -323,7 +351,6 @@ class MainWindow(QMainWindow):
         self.ui.enter_mpcs.setValue(dist_mpcs)
         self.ui.enter_mpcs.blockSignals(False)
 
-    ##########################################################################
 
     def recalculate_reddening_labels(self):
         extinction = self.ui.enter_b_minus_v.value() * self.ui.enter_coef_1.value()
@@ -340,7 +367,6 @@ class MainWindow(QMainWindow):
             absorbtion = self.ui.enter_absorbtion.value()
         return extinction, absorbtion
     
-    ##########################################################################
     
     def view_chart_manager(self):
         add_kde = self.ui.check_add_kde.checkState() == 2
@@ -371,7 +397,6 @@ class MainWindow(QMainWindow):
         self.ui.check_add_kde.setEnabled(True)
         self.ui.button_view_abs_cmd.setEnabled(True)
 
-    ##########################################################################
     
     def pack_all_branch_approx_parameters_in_dict(self):
         extinction, absorbtion = self.get_extinction_absorbtion()
@@ -450,23 +475,19 @@ class MainWindow(QMainWindow):
             }
         }
 
-        filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON')
-        if filename != '':
-            with open(filename, "w") as out_file:
-                json.dump(data, out_file, indent=4)
+        self.save_json(data)
 
         figures = [fig_raw_overview, fig_new_overview, fig_absmag_1, fig_absmag_2, fig_result]
-        filename, _ = QFileDialog.getSaveFileName(self, 'Save PDF')
-        if filename != '':
-            pdf = create_pdf_out_of_figures(figures)
-            pdf.output(filename)
+        pdf = create_pdf_out_of_figures(figures)
         for fig in figures:
             plt.close(fig)
+            
+        self.save_pdf(pdf)
 
-    ##########################################################################
 
     def pack_all_density_parameters_in_dict(self):
         extinction, absorbtion = self.get_extinction_absorbtion()
+        chosen_bool, i_level_low, i_level_high, mean_i_error, mean_color_error = choosing_low_density_regions(self.data, params)
         params = {
             'dist':self.dist, 
             'extinction':extinction,
@@ -477,13 +498,12 @@ class MainWindow(QMainWindow):
             'vi_left':self.ui.enter_vi_left_2.value(),
             'vi_right':self.ui.enter_vi_right_2.value(),
             's_scaler':self.ui.enter_s.value(),
+            'chosen_bool': chosen_bool,
+            'i_level_low': i_level_low,
+            'i_level_high': i_level_high,
+            'mean_i_error': mean_i_error,
+            'mean_color_error': mean_color_error,
         }
-        chosen_bool, i_level_low, i_level_high, mean_i_error, mean_color_error = choosing_low_density_regions(self.data, params)
-        params['chosen_bool'] = chosen_bool
-        params['i_level_low'] = i_level_low
-        params['i_level_high'] = i_level_high
-        params['mean_i_error'] = mean_i_error
-        params['mean_color_error'] = mean_color_error
         return params
 
     def view_density(self):
@@ -515,14 +535,8 @@ class MainWindow(QMainWindow):
         self.ui.button_save_2.setEnabled(True)
 
     def save_density_results(self, pdf: FPDF, data: dict):
-        filename, _ = QFileDialog.getSaveFileName(self, 'Save JSON')
-        if filename != '':
-            with open(filename, "w") as out_file:
-                json.dump(data, out_file, indent=4)
-
-        filename, _ = QFileDialog.getSaveFileName(self, 'Save PDF')
-        if filename != '':
-            pdf.output(filename)
+        self.save_json(data)
+        self.save_pdf(pdf)
 
     def calculate_density_approach(self) -> tuple[FPDF, dict]:
         params = self.pack_all_density_parameters_in_dict()
@@ -580,10 +594,8 @@ class MainWindow(QMainWindow):
             }
         }
 
-        figures = [fig_raw_overview, fig_new_overview, 
-                   fig_absmag_1, fig_absmag_2, 
-                   fig_zoom_density, fig_mc_visualsation, 
-                   fig_result]
+        figures = [fig_raw_overview, fig_new_overview, fig_absmag_1, fig_absmag_2, 
+                   fig_zoom_density, fig_mc_visualsation, fig_result]
         pdf = create_pdf_out_of_figures(figures)
         for fig in figures:
             plt.close(fig)
