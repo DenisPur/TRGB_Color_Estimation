@@ -73,6 +73,7 @@ class MainWindow(QMainWindow):
         self.dist_in_mpcs = 0
         self.input_folder = None
         self.output_folder = None
+        self.input_table = None
 
         # pyqt5 bug fix
         self.ui.group_view_export_changes.setEnabled(False)
@@ -84,6 +85,41 @@ class MainWindow(QMainWindow):
 
     def set_output_folder(self, folder: str):
         self.output_folder = folder
+
+    def set_table_with_input_data(self, filename: str):
+        self.input_table = pd.read_csv(filename)
+
+    def try_load_data_from_table(self):
+        row = self.input_table[self.input_table['pgc'] == int(self.filename)]
+        extinction_done = False
+        if len(row) == 1:
+            extinction = row['E_P'].values[0]
+            if not pd.isna(extinction):
+                self.ui.enter_b_minus_v.setValue(extinction)
+                extinction_done = True
+        if not extinction_done:
+            self.ui.enter_b_minus_v.setValue(0.0)
+
+        distance_done = False
+        if len(row) == 1:
+            dist_mag = row['Dist_[m]'].values[0]
+            dist_low = row['D_low'].values[0]
+            dist_high = row['D_high'].values[0]
+            if all(not pd.isna(v) for v in [
+                    dist_mag, dist_low, dist_high]):
+                self.ui.enter_mags.setValue(dist_mag)
+                self.ui.enter_d_minus.setValue(dist_mag - dist_low)
+                self.ui.enter_d_minus_2.setValue(dist_mag - dist_low)
+                self.ui.enter_d_plus.setValue(dist_high - dist_mag)
+                self.ui.enter_d_plus_2.setValue(dist_high - dist_mag)
+                distance_done = True
+        if not distance_done: 
+            self.ui.enter_mags.setValue(0)
+            self.ui.enter_d_minus.setValue(0)
+            self.ui.enter_d_minus_2.setValue(0)
+            self.ui.enter_d_plus.setValue(0)
+            self.ui.enter_d_plus_2.setValue(0)
+
 
     def save_json(self, data: dict):
         if self.output_folder is not None:
@@ -117,6 +153,8 @@ class MainWindow(QMainWindow):
             try:
                 self.load_file(self.file_path)
                 self.filename = self.file_path.split('/')[-1].removesuffix('.csv')
+                if self.input_table is not None:
+                    self.try_load_data_from_table()
             except pd.errors.ParserError:
                 msg = QMessageBox()
                 msg.setIcon(QMessageBox.Critical)
@@ -467,13 +505,12 @@ class MainWindow(QMainWindow):
             }
         }
 
-        self.save_json(output_data)
-
         figures = [fig_raw_overview, fig_new_overview, fig_absmag_1, fig_absmag_2, fig_result]
         pdf = create_pdf_out_of_figures(figures)
         for fig in figures:
             plt.close(fig)
             
+        self.save_json(output_data)
         self.save_pdf(pdf)
 
 

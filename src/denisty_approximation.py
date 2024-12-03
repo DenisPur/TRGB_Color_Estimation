@@ -99,7 +99,7 @@ def slice_density_graph(
         x_max_y_value, 
         ls='-.', lw=1, 
         color='xkcd:dark red', 
-        label=f'kde (bw=2$\sigma+\epsilon$) : {x_max_y_value:1.3f}')
+        label=f'kde (bw=2$(\sigma+\epsilon)$) : {x_max_y_value:1.3f}')
 
     mean = chosen['color_vi_real'].mean()
     median = chosen['color_vi_real'].median()

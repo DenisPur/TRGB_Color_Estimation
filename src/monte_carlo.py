@@ -8,9 +8,7 @@ from src.denisty_approximation import choosing_low_density_regions
 
 
 def randomly_stir_data(
-        data: pd.DataFrame
-    ) -> pd.DataFrame:
-
+        data: pd.DataFrame) -> pd.DataFrame:
     noice_v = np.random.normal(loc=0.0, scale=1.0, size=len(data))
     noice_i = np.random.normal(loc=0.0, scale=1.0, size=len(data))
 
@@ -25,13 +23,11 @@ def randomly_stir_data(
 
 def crop_data(
         data: pd.DataFrame, 
-        params: dict
-    ) -> pd.DataFrame:
-
-    chosen_bool = ((data['color'] >= params['vi_left']) & 
-                   (data['color'] <= params['vi_right']) & 
-                   (data['mag'] >= params['i_level_low']) & 
-                   (data['mag'] <= params['i_level_high']))
+        params: dict) -> pd.DataFrame:
+    chosen_bool = ((data['color'] >= params['vi_left']) 
+                   & (data['color'] <= params['vi_right'])
+                   & (data['mag'] >= params['i_level_low'])
+                   & (data['mag'] <= params['i_level_high']))
 
     colors = data[chosen_bool]['color'].values
     return colors
@@ -41,9 +37,7 @@ def ax_add_histogram(
         ax: plt.Axes, 
         colors: pd.DataFrame, 
         params: dict, 
-        std_err: float
-    ) -> None:
-
+        std_err: float) -> None:
     bw = 2 * std_err / (max(colors) - min(colors))
     kde = gaussian_kde(colors, bw_method=bw)
     x = np.linspace(min(colors), max(colors), num=200)
@@ -60,9 +54,7 @@ def ax_add_histogram(
 def plot_histogrm_3x3(
         data: pd.DataFrame, 
         params: dict, 
-        smoothing_bw: float
-    ) -> plt.Figure:
-
+        smoothing_bw: float) -> plt.Figure:
     fig, axes = plt.subplots(3, 3, sharex=True, sharey=True, figsize=[9,9])
 
     data_s = data[['mag_v', 'mag_i', 'err_v', 'err_i']].copy()
@@ -82,9 +74,7 @@ def iterate_over_n_experiments(
         data: pd.DataFrame, 
         params: dict, 
         n: int, 
-        smoothing_bw: float
-    ) -> tuple[np.array, float]:
-
+        smoothing_bw: float) -> tuple[np.array, float]:
     data_s = data[['mag_v', 'mag_i', 'err_v', 'err_i']].copy()
     data_s['color'] = data_s['mag_v'] - data_s['mag_i'] - params['extinction']
     data_s['mag'] = data_s['mag_i'] - params['dist'] - params['absorbtion']
@@ -117,9 +107,7 @@ def plot_monte_carlo_results(
         experiments_results: np.array, 
         mean_color: float, 
         std_err:float, 
-        n: int
-    ) -> plt.Figure:
-    
+        n: int) -> plt.Figure:
     def gauss(
             t: np.array,
             mean: float, 
@@ -136,8 +124,7 @@ def plot_monte_carlo_results(
         experiments_results, 
         density=True, bins=bins, 
         color='xkcd:light teal', 
-        alpha=0.8
-    )
+        alpha=0.8)
 
     x_left, x_right = plt.gca().get_xlim()
     y_bottom, y_top = plt.gca().get_ylim()
