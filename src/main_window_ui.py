@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_files/main_window_new.ui'
+# Form implementation generated from reading ui file 'ui_files/main_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.7
 #
@@ -734,7 +734,7 @@ class Ui_MainWindow(object):
         self.enter_eps.setFont(font)
         self.enter_eps.setDecimals(3)
         self.enter_eps.setSingleStep(0.001)
-        self.enter_eps.setProperty("value", 0.05)
+        self.enter_eps.setProperty("value", 0.01)
         self.enter_eps.setObjectName("enter_eps")
         self.gridLayout_15.addWidget(self.enter_eps, 1, 2, 1, 1)
         spacerItem45 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -763,7 +763,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
-        self.main_tabs.setCurrentIndex(0)
+        self.main_tabs.setCurrentIndex(2)
         self.tabs_reddening.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 

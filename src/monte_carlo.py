@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
-from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 from src.denisty_approximation import choosing_low_density_regions
+from src.infra import simple_1d_kde
 
 
 def randomly_stir_data(
@@ -38,10 +38,12 @@ def ax_add_histogram(
         colors: pd.DataFrame, 
         params: dict, 
         std_err: float) -> None:
-    bw = 2 * std_err / (max(colors) - min(colors))
-    kde = gaussian_kde(colors, bw_method=bw)
     x = np.linspace(min(colors), max(colors), num=200)
-    y = kde.evaluate(x)
+    y = simple_1d_kde(
+        data_points=colors,
+        std_error=std_err,
+        eval_points=x)
+
     x_max = x[np.argmax(y)]
     
     ax.hist(colors, bins=21, color='xkcd:peach', density=True, alpha=0.8)
@@ -81,8 +83,7 @@ def iterate_over_n_experiments(
     
     x_points_num = int((params['vi_right'] - params['vi_left']) * 200)
     x_linspace = np.linspace(params['vi_left'], params['vi_right'], num=x_points_num)  
-    bw = 2 * (params['mean_color_error'] + smoothing_bw) / (params['vi_right'] - params['vi_left'])
-    
+
     results = list()
     number_of_stars = list()
     iter_num = 0
@@ -95,8 +96,10 @@ def iterate_over_n_experiments(
         iter_num += 1
         number_of_stars.append(len(colors))
 
-        kde = gaussian_kde(colors, bw_method=bw)
-        y = kde.evaluate(x_linspace)
+        y = simple_1d_kde(
+            data_points=colors,
+            std_error=(params['mean_color_error'] + smoothing_bw),
+            eval_points=x_linspace)
         x_max = x_linspace[np.argmax(y)]
         results.append(x_max)
     mean_number_of_stars = np.median(number_of_stars)
@@ -108,17 +111,10 @@ def plot_monte_carlo_results(
         mean_color: float, 
         std_err:float, 
         n: int) -> plt.Figure:
-    def gauss(
-            t: np.array,
-            mean: float, 
-            std:float) -> np.array:
-        y = 1 / (std * np.sqrt(2*np.pi)) * np.exp(- 0.5 * (t - mean)**2 / std**2)
-        return y
-
     fig, ax = plt.subplots(figsize=[9,9])
 
-    lb, rb = min(experiments_results), max(experiments_results)
-    bins = int((rb - lb) * 200 + 1)
+    left_border, right_border = min(experiments_results), max(experiments_results)
+    bins = int((right_border - left_border) * 200 + 1)
 
     ax.hist(
         experiments_results, 

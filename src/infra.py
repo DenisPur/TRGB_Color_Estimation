@@ -82,14 +82,14 @@ def create_pdf_out_of_figures(fig_list: list[plt.Figure]) -> FPDF:
     return pdf
 
 
-def get_kde(
+def get_2d_kde(
         data: pd.DataFrame, 
         dist: float, 
         extinction: float, 
         absorbtion: float) -> tuple[np.array, np.array, np.array]:
     x_raw = data['color_vi'].to_numpy(dtype=np.float32)
     y_raw = data['mag_i'].to_numpy(dtype=np.float32)
-    x_grid, y_grid, z_grid = get_kde_long_running_part(tuple(x_raw), tuple(y_raw))
+    x_grid, y_grid, z_grid = get_2d_kde_long_running_part(tuple(x_raw), tuple(y_raw))
     
     x_grid = x_grid - extinction
     y_grid = y_grid - dist - absorbtion
@@ -97,7 +97,7 @@ def get_kde(
 
 
 @lru_cache(maxsize=16, typed=False)
-def get_kde_long_running_part(
+def get_2d_kde_long_running_part(
         x: tuple[int, ...], 
         y: tuple[int, ...]) -> tuple[np.array, np.array, np.array]:
     x = np.array(x)
@@ -111,3 +111,21 @@ def get_kde_long_running_part(
     kde = gaussian_kde(xy, bw_method=0.1)
     z_grid = kde(np.vstack([x_grid.ravel(), y_grid.ravel()])).reshape(x_grid.shape) * len(x)
     return (x_grid, y_grid, z_grid)
+
+
+def gauss(
+        x: type[np.array] | float,
+        mean: float, 
+        std: float) -> type[np.array] | float:
+    y = 1 / (std * np.sqrt(2*np.pi)) * np.exp(- 0.5 * (x - mean)**2 / std**2)
+    return y
+
+
+def simple_1d_kde(
+        data_points: np.array,
+        std_error: float,
+        eval_points: np.array) -> np.array:
+    output = np.zeros_like(eval_points)
+    for i, x in enumerate(eval_points):
+        output[i] = sum([gauss(x, dp, std_error) for dp in data_points]) / len(data_points)
+    return output

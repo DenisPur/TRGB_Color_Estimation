@@ -17,7 +17,7 @@ from src.masking_ui import Ui_Dialog as Ui_Masking_Dialog
 
 from src.infra import (
     read_file, check_available_columns, mask_based_on_cells_density, 
-    create_pdf_out_of_figures, get_kde)
+    create_pdf_out_of_figures, get_2d_kde)
 from src.main_charts import ( 
     overview_cmd_field_chart, clearing_chart, rectangular_masking_chart, 
     cells_hist_chart, cells_masking_chart, abs_mag_cmd_chart)
@@ -470,7 +470,7 @@ class MainWindow(QMainWindow):
         self.data['abs_color_vi'] = self.data['color_vi'] - params['extinction']
         self.data['abs_mag_i'] = self.data['mag_i'] - self.dist - params['absorbtion']
         fig_absmag_1 = abs_mag_cmd_chart(self.data, kde=False)
-        kde = get_kde(self.data, self.dist, params['extinction'], params['absorbtion'])
+        kde = get_2d_kde(self.data, self.dist, params['extinction'], params['absorbtion'])
         fig_absmag_2 = abs_mag_cmd_chart(self.data, kde=kde)
 
         chosen_bool, inliers_bool, f_approx, f_std = marking_and_approximating(self.data, params)
@@ -538,8 +538,9 @@ class MainWindow(QMainWindow):
 
     def view_density(self):
         params = self.pack_all_density_parameters_in_dict()
+        smoothing_bw = self.ui.enter_eps.value()
         try:
-            fig = slice_density_graph(self.data, params, smoothing_bw=0.1)
+            fig = slice_density_graph(self.data, params, smoothing_bw=smoothing_bw)
             fig.show()
         except ValueError:
             msg = QMessageBox()
@@ -580,7 +581,7 @@ class MainWindow(QMainWindow):
         self.data['abs_color_vi'] = self.data['color_vi'] - params['extinction']
         self.data['abs_mag_i'] = self.data['mag_i'] - self.dist - params['absorbtion']
         fig_absmag_1 = abs_mag_cmd_chart(self.data, kde=False)
-        kde = get_kde(self.data, self.dist, params['extinction'], params['absorbtion'])
+        kde = get_2d_kde(self.data, self.dist, params['extinction'], params['absorbtion'])
         fig_absmag_2 = abs_mag_cmd_chart(self.data, kde=kde)
     
         number_of_mc_experiments = self.ui.enter_n_exp.value()
@@ -657,5 +658,5 @@ class CalculateKDE(QThread):
         self.absorbtion = absorbtion        
 
     def run(self):
-        kde = get_kde(self.data, self.dist, self.extinction, self.absorbtion)
+        kde = get_2d_kde(self.data, self.dist, self.extinction, self.absorbtion)
         self.result_signal.emit(kde)

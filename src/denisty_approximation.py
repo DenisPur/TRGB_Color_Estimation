@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from scipy.stats import gaussian_kde
 
+from src.infra import simple_1d_kde
 
 def choosing_low_density_regions(
         data: pd.DataFrame, 
@@ -87,9 +87,11 @@ def slice_density_graph(
 
     x_points_num = int((params['vi_right'] - params['vi_left']) * 200)
     x_linspace = np.linspace(start=params['vi_left'], stop=params['vi_right'], num=x_points_num)
-    bw_by_error = 2 * (params['mean_color_error'] + smoothing_bw) / (params['vi_right'] - params['vi_left'])
-    kde_estimator = gaussian_kde(chosen['color_vi_real'].values, bw_method=bw_by_error)
-    y_kde = kde_estimator.evaluate(x_linspace)
+    y_kde = simple_1d_kde(
+        data_points=chosen['color_vi_real'].values,
+        std_error=(params['mean_color_error'] + smoothing_bw),
+        eval_points=x_linspace)
+
     x_max_y_value = np.argmax(y_kde) / (x_points_num - 1) * (params['vi_right'] - params['vi_left']) + params['vi_left']
 
     axs[1].plot(
@@ -99,7 +101,7 @@ def slice_density_graph(
         x_max_y_value, 
         ls='-.', lw=1, 
         color='xkcd:dark red', 
-        label=f'kde (bw=2$(\sigma+\epsilon)$) : {x_max_y_value:1.3f}')
+        label=f'kde max : {x_max_y_value:1.3f}')
 
     mean = chosen['color_vi_real'].mean()
     median = chosen['color_vi_real'].median()
