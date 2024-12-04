@@ -127,5 +127,6 @@ def simple_1d_kde(
         eval_points: np.array) -> np.array:
     output = np.zeros_like(eval_points)
     for i, x in enumerate(eval_points):
-        output[i] = sum([gauss(x, dp, std_error) for dp in data_points]) / len(data_points)
+        output[i] = sum(gauss(data_points, x, std_error)) / len(data_points) 
+        # datapoints and x swapped for better performance
     return output

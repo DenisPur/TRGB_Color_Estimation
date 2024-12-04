@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from src.denisty_approximation import choosing_low_density_regions
-from src.infra import simple_1d_kde
+from src.infra import simple_1d_kde, gauss
 
 
 def randomly_stir_data(
@@ -28,7 +28,6 @@ def crop_data(
                    & (data['color'] <= params['vi_right'])
                    & (data['mag'] >= params['i_level_low'])
                    & (data['mag'] <= params['i_level_high']))
-
     colors = data[chosen_bool]['color'].values
     return colors
 
@@ -43,7 +42,6 @@ def ax_add_histogram(
         data_points=colors,
         std_error=std_err,
         eval_points=x)
-
     x_max = x[np.argmax(y)]
     
     ax.hist(colors, bins=21, color='xkcd:peach', density=True, alpha=0.8)

@@ -480,8 +480,13 @@ class MainWindow(QMainWindow):
         d_p = params['d_plus']
         i_mag = params['i_level']
         estimate = f_approx(i_mag)
-        estimate_high = f_approx(i_mag+d_p) - f_std(i_mag+d_p)
-        estimate_low = f_approx(i_mag-d_m) + f_std(i_mag-d_m)
+        est_1 = f_approx(i_mag+d_p) - f_std(i_mag+d_p)
+        est_2 = f_approx(i_mag+d_p) + f_std(i_mag+d_p)
+        est_3 = f_approx(i_mag-d_m) - f_std(i_mag-d_m)
+        est_4 = f_approx(i_mag-d_m) + f_std(i_mag-d_m)
+        estimate_low = min([est_1, est_2, est_3, est_4])
+        estimate_high = max([est_1, est_2, est_3, est_4])
+
         output_data = {
             'method' : 'approximation of a branch by a parabola',
             'filename' : self.file_path,
