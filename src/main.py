@@ -165,6 +165,8 @@ class MainWindow(QMainWindow):
 
     def reload_file(self):
         self.load_file(self.file_path)
+        if self.input_table is not None:
+            self.try_load_data_from_table()
 
     def load_file(self, filename):
         self.data = read_file(filename)
