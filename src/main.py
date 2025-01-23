@@ -502,7 +502,7 @@ class MainWindow(QMainWindow):
             'distance high' : params['dist'] + d_p,
             'distance [in mpcs]' : self.dist_in_mpcs,
             'absorbtion (I)' : params['absorbtion'],
-            'extinction (V-I)' : params['extinction'],
+            'color excess (V-I)' : params['extinction'],
             'paramters' : {
                 'vi_left': params['vi_left'],
                 'vi_right': params['vi_right'], 
@@ -617,7 +617,7 @@ class MainWindow(QMainWindow):
             'distance high' : params['dist'] + params['d_plus'],
             'distance [in mpcs]' : self.dist_in_mpcs,
             'absorbtion (I)' : params['absorbtion'],
-            'extinction (V-I)' : params['extinction'],
+            'color excess (V-I)' : params['extinction'],
             'paramters' : {
                 'mean number of stars' : num_of_stars,
                 'number of m-c experiments' : number_of_mc_experiments,
