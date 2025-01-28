@@ -57,9 +57,11 @@ Run the program. This is what you should see:
     <img src="exhibition_materials/07_clipped.png" width="500"/>
 
 4. Enter distance (in MPc or in Mag).
+
     <img src="exhibition_materials/08_distance.png" width="500"/>
 
 5. Enter extinction (V-I) and absorbtion in filter I.
+
     <img src="exhibition_materials/09_color_excess.png" width="500">
 
 6. View the cleaned instrument field and color-magnitude diagram in absolute magnitudes. There will be density histogram over the scatterplot, you can change it to kernel-density plot (kde) if you need. Using kde usually takes some time.
