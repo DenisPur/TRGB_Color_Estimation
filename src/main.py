@@ -1,9 +1,7 @@
-import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import json
-from pathlib import Path
 from fpdf import FPDF
 
 from PyQt5.QtCore import QThread, pyqtSignal, QLocale
@@ -34,8 +32,10 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
 
         self.setLocale(QLocale("en_US"))
+        self.initial_ui_setup()
 
-        # UI set up
+
+    def initial_ui_setup(self):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.main_tabs.setTabEnabled(2, False)
@@ -105,8 +105,7 @@ class MainWindow(QMainWindow):
             dist_mag = row['Dist_[m]'].values[0]
             dist_low = row['D_low'].values[0]
             dist_high = row['D_high'].values[0]
-            if all(not pd.isna(v) for v in [
-                    dist_mag, dist_low, dist_high]):
+            if all(not pd.isna(dist) for dist in [dist_mag, dist_low, dist_high]):
                 self.ui.enter_mags.setValue(dist_mag)
                 self.ui.enter_d_minus.setValue(dist_mag - dist_low)
                 self.ui.enter_d_minus_2.setValue(dist_mag - dist_low)

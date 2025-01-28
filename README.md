@@ -1,11 +1,19 @@
 # TRGB - Color Estimation
 
+This small program was written during the processing of the EDD catalog to measure the color index of the red giant branch. Now I'm making it freely available. 
+
+This Python program allows you to clean the photometry file, crop the field of the instrument (for example, by selecting the outer regions of the galaxy in field), build a color-magnitude diagram and measure the color index at any level ($M_I$) in two ways: by searching for the maximum density or approximating the branch with a parabola. For convenience, a graphical interface written in QT5 is used. 
+
+
+When using (including modification), I humbly ask you to quote the work "TBA".
+
 ### Install
 To create a working environment in Conda, run:
 ```
 conda env create -f environment.yml
 ```
 This will create an environment called `trgb_gui`, which will contain all the necessary Python packages. Alternatively, you can install them manually: 
+```
 - python > 3.9
 - pyqt
 - fpdf2
@@ -16,11 +24,12 @@ This will create an environment called `trgb_gui`, which will contain all the ne
 - scipy
 - seaborn
 - jupyterlab
+```
 
 Note: its `fpdf2`, not `fpdf`!
 
 ### Run
-If you installed the environment using `environment.yml` activate it and run: 
+If you installed the environment using `environment.yml` activate it and run the program: 
 ```
 conda activate trgb_gui
 python run.py
@@ -28,36 +37,52 @@ python run.py
 
 # Usage
 ### File selection and basic data entry
-This is what you should see:
-![](exhibition_materials/first_page.png)
+Run the program. This is what you should see:
+
+<img src="exhibition_materials/02_base_mouse.png" width="500"/>
 
 1. Select file `.csv` file with photometric data. Each row should represent a possible star. Mandatory columns: `x`, `y` (coordinates in the instrument's field of view), `mag_v`, `err_v`, `mag_i`, `err_i` (apparent magnitude and measurement error in filters I and V, respectively). 
 
     Columns `type`, `snr_x` (i.e. `snr_v` or `snr_i`), `sharp_x`, `round_x`, `crowd_x`, `flag_x`, if present, can be used to clean data in the next step.
 
-2. Clean the photometry data. Select criteria to use, change them if necessary.
+    <img src="exhibition_materials/03_file_selections.png" width="500"/>
 
-3. Crop the field of view if necessary. You can skip this step entirely.
+2. Clean the photometry data. Select criteria to use, change them if necessary. In this example, I got rid of the bottom of the CMD by raising the Signal/Noise threshold.
 
-![](exhibition_materials/entering_dist.png)
+    <img src="exhibition_materials/05_clearing.png" width="500"/>
 
-4. Enter distance (in MPc or in Mag). Click `Ok`.
+3. Crop the field of view if necessary. In this example, I have cut off the areas of the instrument's field most dense with stars, and thus selected only the outer regions of the galaxy. You can also select a rectangular area in the field by entering the coordinates manually.
 
-5. Enter extinction (V-I) and absorbtion in filter I. Click `Ok` or `Cancel` to reset.
+    <img src="exhibition_materials/06_clipping.png" width="500"/>
+    <img src="exhibition_materials/07_clipped.png" width="500"/>
+
+4. Enter distance (in MPc or in Mag).
+    <img src="exhibition_materials/08_distance.png" width="500"/>
+
+5. Enter extinction (V-I) and absorbtion in filter I.
+    <img src="exhibition_materials/09_color_excess.png" width="500">
 
 6. View the cleaned instrument field and color-magnitude diagram in absolute magnitudes. There will be density histogram over the scatterplot, you can change it to kernel-density plot (kde) if you need. Using kde usually takes some time.
 
-![](exhibition_materials/viewing_charts.png)
+    <img src="exhibition_materials/10_abs_cmd.png" width="500">
+    <img src="exhibition_materials/11_abs_cmd_isodense.png" width="500">
 
 ### Branch approximation
 TBA
 
-![](exhibition_materials/branch_analythis.png)
+<img src="exhibition_materials/branch_1.png" width="500">
+<img src="exhibition_materials/branch_2.png" width="500">
 
 ### Density analythis
 TBA
 
-![](exhibition_materials/density_analythis.png)
+<img src="exhibition_materials/density_1.png" width="500">
+
+### SAving results
+TBA
+
+<img src="exhibition_materials/saving_1.png" width="500">
+<img src="exhibition_materials/saving_2.png" width="500">
 
 ### Input format
 
