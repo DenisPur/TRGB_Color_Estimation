@@ -7,7 +7,7 @@ This Python program allows you to clean the photometry file, crop the field of t
 
 When using (including modification), I humbly ask you to quote the work "TBA".
 
-### Install
+# Install
 To create a working environment in Conda, run:
 ```
 conda env create -f environment.yml
@@ -83,12 +83,16 @@ TBA
 
 <img src="exhibition_materials/density_1.png" width="5800">
 
-### SAving results
+### Saving results
 TBA
 
-<img src="exhibition_materials/saving_1.png" width="500">
-<img src="exhibition_materials/saving_2.png" width="500">
+<img src="exhibition_materials/saving_1+2.png" width="800">
 
-### Input format
+<img src="exhibition_materials/result_pdf.png" width="800">
+
+<img src="exhibition_materials/result_json.png" width="800">
+
+
+# Input format
 
 TBA
