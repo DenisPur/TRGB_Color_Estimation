@@ -54,6 +54,7 @@ Run the program. This is what you should see:
 3. Crop the field of view if necessary. In this example, I have cut off the areas of the instrument's field most dense with stars, and thus selected only the outer regions of the galaxy. You can also select a rectangular area in the field by entering the coordinates manually.
 
     <img src="exhibition_materials/06_clipping.png" width="500"/>
+    
     <img src="exhibition_materials/07_clipped.png" width="500"/>
 
 4. Enter distance (in MPc or in Mag).
