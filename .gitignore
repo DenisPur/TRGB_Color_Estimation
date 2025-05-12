@@ -6,7 +6,8 @@ ui_files
 ui_files/*
 
 # testing
-test.py
+*test.py
+*test.ipynb
 
 # results
 *.pdf
