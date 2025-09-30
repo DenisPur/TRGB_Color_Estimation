@@ -91,8 +91,3 @@ TBA
 <img src="exhibition_materials/result_pdf.png" width="800">
 
 <img src="exhibition_materials/result_json.png" width="800">
-
-
-# Input format
-
-TBA
