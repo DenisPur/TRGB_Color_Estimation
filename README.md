@@ -71,20 +71,21 @@ Run the program. This is what you should see:
     
     <img src="exhibition_materials/11_abs_cmd_isodense.png" width="800">
 
+The program provides the ability to measure color index using two methods described in the article (ref. TBA).
+
 ### Branch approximation
-TBA
+This method allows one to approximate the branch of red giants using a parabola. A peculiarity of this method is that one must manually specify the boundaries of the region in color index (V-I) - brightness (I) coordinates where the branch is located.
 
 <img src="exhibition_materials/branch_1.png" width="500">
 
 <img src="exhibition_materials/branch_2.png" width="800">
 
 ### Density analythis
-TBA
+This method allows one to measure the color index using the density profile of the stars at the specified M_I level. The confidence interval estimate will be obtained using the Monte Carlo method.
 
 <img src="exhibition_materials/density_1.png" width="5800">
 
-### Saving results
-TBA
+The processing result will be two files: a json file with parameters and numerical estimates, and a pdf file with a visualization of intermediate graphs.
 
 <img src="exhibition_materials/saving_1+2.png" width="800">
 
