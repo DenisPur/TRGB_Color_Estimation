@@ -85,6 +85,7 @@ This method allows one to measure the color index using the density profile of t
 
 <img src="exhibition_materials/density_1.png" width="5800">
 
+### Saving results
 The processing result will be two files: a json file with parameters and numerical estimates, and a pdf file with a visualization of intermediate graphs.
 
 <img src="exhibition_materials/saving_1+2.png" width="800">
