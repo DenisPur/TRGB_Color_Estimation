@@ -36,14 +36,30 @@ python run.py
 ```
 
 # Usage
+### Input Data
+The input data must be a CSV file with fixed column names. Examples of valid input files can be found in the `input_examples` directory. The column names must be as follows:
+
+##### Required columns:
+- `x`,`y` - potential star coordinates,
+- `mag_v`,`err_v`,`mag_i`,`err_i` - stellar magnitude and error in the V and I filters,
+##### Optional columns:
+- `type` - object profile shape classification as in DOLPHOT,
+- `snr_v`,`snr_i` - signal-to-noise ratio,
+- `sharp_v`,`sharp_i` - sharpness,
+- `round_v`,`round_i` - roundness,
+- `crowd_v`,`crowd_i` - crowding parameter,
+- `flag_v`,`flag_i` - diagnostic quality flag.
+
+The columns provided in the input data can be used later to clean up the photometry. Additional columns may be present, and they can be in any order.
+It might be helpful to look at the Jupyter notebook in the `converter_to_csv` directory as an example of converting DOLPHOT data to the format used.
+
+
 ### File selection and basic data entry
 Run the program. This is what you should see:
 
 <img src="exhibition_materials/02_base_mouse.png" width="500"/>
 
 1. Select file `.csv` file with photometric data. Each row should represent a possible star. Mandatory columns: `x`, `y` (coordinates in the instrument's field of view), `mag_v`, `err_v`, `mag_i`, `err_i` (apparent magnitude and measurement error in filters I and V, respectively). 
-
-    Columns `type`, `snr_x` (i.e. `snr_v` or `snr_i`), `sharp_x`, `round_x`, `crowd_x`, `flag_x`, if present, can be used to clean data in the next step.
 
     <img src="exhibition_materials/03_file_selections.png" width="800"/>
 
